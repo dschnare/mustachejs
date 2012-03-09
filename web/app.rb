@@ -1,3 +1,5 @@
+require 'rubygems'
+require 'bundler/setup'
 require 'sinatra'
 require 'net/https'
 require 'uri'
