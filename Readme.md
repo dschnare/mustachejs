@@ -20,16 +20,20 @@ For help with the mustache syntax see the following [manpage](http://mustache.gi
 This project is organized into the following partitions/abstractions.
 
 - src
+
 	This directory contains all source code that implements mustachejs.
 
 - vendor
+
 	This directory contains all the required third party binaries and source code.
+
 	The following third party dependencies exist:
 		- AjaxMin.exe (used to minify the JavaScript source)
 		- jslint.js (used to test the JavaScript source)
 		- rhino.jar (used to execute jslint.js)
 
 - web
+
 	This directory is a web project used to test the mustache specification.
 
 
