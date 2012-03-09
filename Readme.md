@@ -8,10 +8,6 @@ virtue of the following features:
 - The complete [mustache specification](https://github.com/mustache/spec) is implemented, including lambdas.
 - The source code is well commented and easier to learn from.
 
-This is not to say that [mustache.js](https://github.com/janl/mustache.js) is inadequate in any way.
-However, I was a bit disappointed when I discovered the entire mustache specification was not
-implemented. I was also quite curious how one would write a mustache implementation without regular expressions.
-
 For help with the mustache syntax see the following [manpage](http://mustache.github.com/mustache.5.html).
 
 
