@@ -74,3 +74,21 @@ To kill the web server press `Ctr+C`.
 Browsers and environments will be added to this list as testing ensues.
 
 - Chrome
+
+# API
+
+The mustachejs module exposes a simple API.
+
+	MUSTACHE is the global object containing the mustachejs API.
+
+
+	Attempts to render the specified mustache template.
+
+	This method will throw an error if any syntax errors are encountered.
+
+	@template (string) The mustache template to render.
+	@data (object) [optional] The data to provide the template (i.e. context).
+	@paritals (object) [optional] An object that is searched for partial tempaltes by key.
+	@return (string) The rendered template.
+
+	MUSTACHE.render(template, data, partials)
