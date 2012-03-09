@@ -40,7 +40,7 @@ This project is organized into the following partitions/abstractions.
 # Building
 
 Ruby Rake is used to build the mustachejs module. Use `rake -D` to list all the rake tasks.
-The `Rakefile` is commented quite well so you can also read this file to understand how
+The `Rakefile` is commented quite well so you can read this file to understand how
 the mustachejs module is built and minified.
 
 The `src` directory contains the source code that implements mustachejs. The source code
