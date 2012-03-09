@@ -54,7 +54,7 @@ file.
 Any web server can be used to serve up the testing project, but for convenience a Sinatra web app
 has been written to get testing quickly.
 
-To get started with the built-in Sinatra app run:
+To get started with the built-in Sinatra app run (requires [Bundler](http://gembundler.com/) and [Foreman](https://github.com/ddollar/foreman)):
 
 Mac/Linux/Unix:
 
