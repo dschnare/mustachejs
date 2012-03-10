@@ -84,6 +84,8 @@ Browsers and environments will be added to this list as testing ensues.
 The mustachejs module exposes a simple API.
 
 	MUSTACHE is the global object containing the mustachejs API.
+	Note that this global object is only created if mustachejs is not
+	required via an AMD or CommonJS module loader.
 
 
 	Attempts to render the specified mustache template.
