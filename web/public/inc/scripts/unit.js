@@ -239,9 +239,9 @@ var unit = (function(browserConsole, document) {
 
         console = {
             show: function() {
-                if (!div.parentNode) {
-                    var body = document.getElementsByTagName("body")[0];
+                var body = document.getElementsByTagName("body")[0];
 
+                if (div.parentNode !== body) {
                     if (body) {
                         body.appendChild(div);
                     }
@@ -429,8 +429,10 @@ var unit = (function(browserConsole, document) {
 				} catch (ignore) {}
 			}
 
-            if (browserConsole && typeof browserConsole.log === "function") {
+            try {
                 browserConsole.log(message);
+            } catch (error) {
+                // ignore
             }
 		},
 		/**

@@ -18,7 +18,7 @@ $(function () {
 					return function(suites) {
 						return $.ajax({
 							url: uri,
-							dataType: 'text',
+							dataType: 'text'
 						}).pipe(function(text) {
 							return (Function('return ' + text)());
 						}).pipe(function(o) {

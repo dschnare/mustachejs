@@ -24,13 +24,14 @@ This project is organized into the following partitions/abstractions.
 	This directory contains all the required third party binaries and source code.
 
 	The following third party dependencies exist:
-		- AjaxMin.exe (used to minify the JavaScript source)
+
+		- AjaxMin.exe (used to minify the JavaScript source -- Requires Windows)
 		- jslint.js (used to test the JavaScript source)
 		- rhino.jar (used to execute jslint.js)
 
 - web
 
-	This directory is a web project used to test the mustache specification.
+	This directory is a web project used to test against the mustache specification.
 
 
 # Building
@@ -42,7 +43,7 @@ the mustachejs module is built and minified.
 The `src` directory contains the source code that implements mustachejs. The source code
 is broken out into individual files that can be easily digested. These smaller files can be
 thought of as mini-modules. The mustachejs module is constructed from the `_mustache.js` template
-file.
+file and including the appropriate mini-module.
 
 
 # Testing
@@ -70,6 +71,13 @@ To kill the web server press `Ctr+C`.
 Browsers and environments will be added to this list as testing ensues.
 
 - Chrome
+- Firefox 8+
+- Opera 11+
+- Safari 5+
+- IE 7/8/9/10 Preview
+- [Nodejs](http://nodejs.org/docs/latest/api/modules.html)/[CommonJS Module](http://wiki.commonjs.org/wiki/Modules/1.1)
+- [AMD Module](https://github.com/dschnare/definejs)
+
 
 # API
 
