@@ -1,12 +1,11 @@
 # Overview
 
 Mustachejs is an implementation of the mustache template specification for JavaScript.
-This implementation is different than [mustache.js](https://github.com/janl/mustache.js) by
-virtue of the following features:
+This implementation has the following features:
 
 - Regular expressions are not used in order to mitigate overhead and improve performance.
 - The complete [mustache specification](https://github.com/mustache/spec) is implemented, including lambdas.
-- The source code is well commented and easier to learn from.
+- The source code is well commented and easy to learn from.
 
 For help with the mustache syntax see the following [manpage](http://mustache.github.com/mustache.5.html).
 
