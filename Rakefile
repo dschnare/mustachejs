@@ -17,12 +17,16 @@ JSLINT_PATH = File.join('vendor', 'jslint.js')
 # This list of files is used in the 'clean' task to delete only the generated files.
 generated_files = []
 
+# Ensure that our input and output directoroes are created.
+directory JS_IN_DIR
+directory JS_OUT_DIR
+
 # Ensure that we always have a 'default' task.
-task :default
+task :default => [JS_IN_DIR, JS_OUT_DIR]
 
 # Define our minify method. Change this if you want to minify using something of your choice.
 def minify (*input, output)
-	Kernel.system("vendor/ajaxmin.exe -js -global:define,window #{input.join(' ')} -out #{output}")
+	Kernel.system("vendor/ajaxmin.exe -js -global:define,window -clobber:true #{input.join(' ')} -out #{output}")
 end
 
 
@@ -68,16 +72,18 @@ def create_js_module (task, templatePath)
 		pattern = /(((^[ \t]*)(var([ \t]+))?).*)?\{\{#{filename}\}\}/u
 		pattern =~ mod
 
-		# maintain the indentation level
-		if $~[4].nil?
-			s.gsub!(/^/, $~[3])
-			s.sub!(/^\s*/, '')
-		else
-			s.gsub!(/^/, $~[3][0]*($~[3].length + 1))
-			s.sub!(/^\s*/, '')
-		end
+		if !$~.nil?
+			# maintain the indentation level
+			if $~[4].nil?
+				s.gsub!(/^/, $~[3])
+				s.sub!(/^\s*/, '')
+			else
+				s.gsub!(/^/, $~[3][0]*($~[3].length + 1))
+				s.sub!(/^\s*/, '')
+			end
 
-		mod.sub!(pattern, '\1' + s)
+			mod.sub!(pattern, '\1' + s)
+		end
 	end
 
 	create_dirs_if_missing(File.dirname(task.name))
@@ -122,6 +128,7 @@ FileList[JS_MODULE_TEMPLATE_GLOB].each do |src|
 	end
 
 	if hasfiles
+		file js_module_file => src
 		file js_module_file do |t|
 			create_js_module(t, src)
 		end

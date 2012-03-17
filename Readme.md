@@ -57,7 +57,7 @@ Mac/Linux/Unix:
 	bundle install
 	foreman start
 
-Windows
+Windows (does not require Foreman)
 
 	bundle install
 	bundle exec ruby -Cweb app.rb -p 5000
