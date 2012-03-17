@@ -1,7 +1,14 @@
+/*!
+Author: Darren Schnare
+Keywords: javascript,mustache,template
+License: MIT ( http://www.opensource.org/licenses/mit-license.php )
+Repo: https://github.com/dschnare/mustachejs
+*/
 var MUSTACHE = (function () {
 	'use strict';
 
-	var util = (function () {
+	var k = null,
+		util = (function () {
 			'use strict';
 		
 			// The util object represents a set of utilitarian functions.
@@ -1034,17 +1041,34 @@ var MUSTACHE = (function () {
 					}
 				};
 			};
-		}(util, makeMutableString, makeTokenizer, makeContextStack));
+		}(util, makeMutableString, makeTokenizer, makeContextStack)),
+		MUSTACHE = {
+			render: function (template, data, partials) {
+				var parser = makerParser();
 
-	return {
-		render: function (template, data, partials) {
-			var parser = makerParser();
+				return parser.parse({
+					template: template,
+					data: data,
+					partials: partials
+				});
+			}
+		};
 
-			return parser.parse({
-				template: template,
-				data: data,
-				partials: partials
-			});
+	// Asynchronous modules (AMD) supported.
+	if (typeof define === 'function' &&
+		typeof define.amd === 'object') {
+
+		define(MUSTACHE);
+		MUSTACHE = undefined;
+
+	// Nodejs/CommonJS modules supported.
+	} else if (typeof exports !== 'undefined') {
+
+		for (k in MUSTACHE) {
+			exports[k] = MUSTACHE[k];
 		}
-	};
+		MUSTACHE = undefined;
+	}
+
+	return MUSTACHE;
 }());
