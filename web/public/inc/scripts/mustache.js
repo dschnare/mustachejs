@@ -1,10 +1,4 @@
 /*
-Author: YOUR NAME
-Keywords: javascript,OTHER_KEYWORDS
-License: MIT ( http://www.opensource.org/licenses/mit-license.php )
-Repo: https://github.com/dschnare/PROJECT
-*/
-/*!
 Author: Darren Schnare
 Keywords: javascript,mustache,template
 License: MIT ( http://www.opensource.org/licenses/mit-license.php )
