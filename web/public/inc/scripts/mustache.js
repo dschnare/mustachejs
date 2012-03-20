@@ -1048,6 +1048,7 @@ var MUSTACHE = (function () {
 			};
 		}(util, makeMutableString, makeTokenizer, makeContextStack)),
 		MUSTACHE = {
+			makeTokenizer: makeTokenizer,
 			render: function (template, data, partials) {
 				var parser = makerParser();
 

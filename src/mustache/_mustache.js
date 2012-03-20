@@ -8,6 +8,7 @@ var MUSTACHE = (function () {
 		makeContextStack = {{contextstack}},
 		makerParser = {{parser}},
 		MUSTACHE = {
+			makeTokenizer: makeTokenizer,
 			render: function (template, data, partials) {
 				var parser = makerParser();
 
