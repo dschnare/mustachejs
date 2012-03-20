@@ -50,7 +50,6 @@
 		// then we try pussing it onto the stack.
 		if (arguments.length === 1) {
 			ctxStack.push(o);
-			o = null;
 		}
 
 		return ctxStack;
