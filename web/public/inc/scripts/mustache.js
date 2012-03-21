@@ -797,6 +797,32 @@ var MUSTACHE = (function () {
 			// Return a 'maker' function to make a new parser.
 			return function () {
 				return {
+					// Determines if the specified template actually contains mustache markup.
+					containsMarkup: function (template) {
+						var tokenizer = makeTokenizer(template),
+							token = tokenizer.next(),
+							isMustacheTemplate = false;
+		
+						// Iterate over each token in the template and parse accordingly.
+						while (token && !isMustacheTemplate) {
+							switch (token.type) {
+							case 'implicit':
+							case 'comment':
+							case 'set-delimiter':
+							case 'interpolation':
+							case 'unescape-interpolation':
+							case 'partial':
+							case 'section-begin':
+							case 'invert-section-begin':
+								isMustacheTemplate = true;
+								break;
+							}
+		
+							token = tokenizer.next();
+						}
+		
+						return isMustacheTemplate;
+					},
 					// Parses a mustache template and returns the result as a string.
 					// The 'args' argument is an object with the following properties:
 					//
@@ -1053,6 +1079,7 @@ var MUSTACHE = (function () {
 		}(util, makeMutableString, makeTokenizer, makeContextStack)),
 		MUSTACHE = {
 			makeTokenizer: makeTokenizer,
+			containsMarkup: parser.containsMarkup,
 			render: function (template, data, partials) {
 				var parser = makerParser();
 
