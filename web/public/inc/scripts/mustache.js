@@ -546,20 +546,24 @@ var MUSTACHE = (function () {
 					sectionText = sectionText.toString();
 		
 					if (typeof data === 'function') {
-						if (data.length === 1) {
+						// When used as the data value for an Interpolation tag, the lambda MUST be
+						// treatable as an arity 0 function, and invoked as such.  The returned value
+						// MUST be rendered against the default delimiters, then interpolated in place
+						// of the lambda. -- https://github.com/mustache/spec/blob/master/specs/~lambdas.yml
+						//if (data.length === 1) {
 							data = parser.parse({
-								template: data.call(data, sectionText),
+								template: data.call(undefined, sectionText),
 								data: contextStack.context(),
 								partials: partials,
 								delim: delim
 							});
-						} else {
+						/*} else {
 							data = parser.parse({
-								template: data.call(data),
+								template: data.call(undefined),
 								data: contextStack.context(),
 								partials: partials
 							});
-						}
+						}*/
 					} else {
 						for (i = 0; i < len; i += 1) {
 							name = names[i];
@@ -567,10 +571,10 @@ var MUSTACHE = (function () {
 		
 							if (data !== undefined) {
 								if (typeof data === 'function') {
-									if (data.length === 1) {
-										data = data.call(data, sectionText);
+									if (data.length === 1 || data.length === 2) {
+										data = data.call(undefined, sectionText);
 									} else {
-										data = data.call(data);
+										data = data.call(undefined);
 									}
 								}
 		
@@ -603,10 +607,10 @@ var MUSTACHE = (function () {
 		
 							if (data !== undefined) {
 								if (typeof data === 'function') {
-									if (data.length === 1) {
-										data = data.call(data, sectionText);
+									if (data.length === 1 || data.length === 2) {
+										data = data.call(undefined, sectionText);
 									} else {
-										data = data.call(data);
+										data = data.call(undefined);
 									}
 								}
 		
@@ -630,7 +634,7 @@ var MUSTACHE = (function () {
 		
 					if (typeof data === 'function') {
 						data = parser.parse({
-							template: data.call(data),
+							template: data.call(undefined),
 							data: contextStack.context(),
 							partials: {}
 						});

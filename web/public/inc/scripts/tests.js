@@ -72,7 +72,7 @@ $(function () {
 	// When the test suites are done synthesizing (i.e. created)
 	// then we simply create and run a test harness to run them all.
 	}).done(function(suites) {
-		var args = ['Mustache.js'];
+		var args = ['Mustachejs'];
 		args.push.apply(args, suites);
 		unit.makeTestHarness.apply(unit, args).run();
 	});
