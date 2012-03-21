@@ -9,6 +9,7 @@ var MUSTACHE = (function () {
 		makerParser = {{parser}},
 		MUSTACHE = {
 			makeTokenizer: makeTokenizer,
+			containsMarkup: parser.containsMarkup,
 			render: function (template, data, partials) {
 				var parser = makerParser();
 
