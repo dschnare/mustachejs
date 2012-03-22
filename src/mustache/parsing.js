@@ -374,6 +374,9 @@
 					var value = contextStack.context();
 
 					return {
+						context: function () {
+							return undefined;
+						},
 						get: function () {
 							return value;
 						},
@@ -390,6 +393,9 @@
 					}
 
 					return {
+						context: function () {
+							return o;
+						},
 						get: function () {
 							var ret;
 
@@ -418,6 +424,9 @@
 					}
 
 					return {
+						context: function () {
+							return o;
+						},
 						get: function () {
 							var ret;
 

@@ -900,6 +900,9 @@ var MUSTACHE = (function () {
 							var value = contextStack.context();
 		
 							return {
+								context: function () {
+									return undefined;
+								},
 								get: function () {
 									return value;
 								},
@@ -916,6 +919,9 @@ var MUSTACHE = (function () {
 							}
 		
 							return {
+								context: function () {
+									return o;
+								},
 								get: function () {
 									var ret;
 		
@@ -944,6 +950,9 @@ var MUSTACHE = (function () {
 							}
 		
 							return {
+								context: function () {
+									return o;
+								},
 								get: function () {
 									var ret;
 		
