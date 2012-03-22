@@ -524,7 +524,7 @@ var MUSTACHE = (function () {
 				return ctxStack;
 			};
 		}()),
-		makerParser = (function (util, makeMutableString, makeTokenizer, makeContextStack) {
+		parsing = (function (util, makeMutableString, makeTokenizer, makeContextStack) {
 			'use strict';
 		
 			/*global 'util', 'makeMutableString', 'makeTokenizer', 'makeContextStack'*/
@@ -551,12 +551,12 @@ var MUSTACHE = (function () {
 						// MUST be rendered against the default delimiters, then interpolated in place
 						// of the lambda. -- https://github.com/mustache/spec/blob/master/specs/~lambdas.yml
 						//if (data.length === 1) {
-							data = parser.parse({
-								template: data.call(undefined, sectionText),
-								data: contextStack.context(),
-								partials: partials,
-								delim: delim
-							});
+						data = parser.parse({
+							template: data.call(undefined, sectionText),
+							data: contextStack.context(),
+							partials: partials,
+							delim: delim
+						});
 						/*} else {
 							data = parser.parse({
 								template: data.call(undefined),
@@ -792,296 +792,432 @@ var MUSTACHE = (function () {
 		
 					// Return the leading whitespace (used for indenting partials).
 					return leading;
-				};
+				},
+				// This is a convenience function that looksahead to retrieve the
+				// ending section token for the specified section token.
+				getEndSectionToken = function (beginToken, tokenizer, delim) {
+					var token = tokenizer.next(delim),
+						tokens = [];
 		
-			// Return a 'maker' function to make a new parser.
-			return function () {
-				return {
-					// Determines if the specified template actually contains mustache markup.
-					containsMarkup: function (template) {
-						var tokenizer = makeTokenizer(template),
-							token = tokenizer.next(),
-							isMustacheTemplate = false;
+					while (token) {
+						switch (token.type) {
+						case 'section-end':
+							if (tokens.length && token.value === tokens[tokens.length - 1].value) {
+								tokens.pop();
+							} else if (beginToken.value === token.value) {
+								if (!tokens.length) {
+									return token;
+								}
 		
-						// Iterate over each token in the template and parse accordingly.
-						while (token && !isMustacheTemplate) {
-							switch (token.type) {
-							case 'implicit':
-							case 'comment':
-							case 'set-delimiter':
-							case 'interpolation':
-							case 'unescape-interpolation':
-							case 'partial':
-							case 'section-begin':
-							case 'invert-section-begin':
-								isMustacheTemplate = true;
-								break;
+								throw new Error('Unbalanced sections encountered: "' + token.text + '" on line ' + token.line);
 							}
-		
-							token = tokenizer.next();
+							break;
+						case 'section-begin':
+						case 'invert-section-begin':
+							tokens.push(token);
+							break;
 						}
 		
-						return isMustacheTemplate;
-					},
-					// Parses a mustache template and returns the result as a string.
-					// The 'args' argument is an object with the following properties:
-					//
-					// template - the template string
-					// data - [OPTIONAL] the data or context to use for expansion
-					// partials - [OPTIONAL] a hash containing partial templates to be used in partial expansion
-					// delim - [OPTIONAL] the left and right delimters as: {left, right}
-					// contextStack - [INTERNAL USE ONLY] the context stack to use for this parse command
-					parse: function (args) {
-						var template = makeMutableString(args.template ? args.template.toString() : ''),
-							partials = args.partials || {},
-							data = args.data || {},
-							tokenizer = makeTokenizer(template),
-							delim = args.delim || tokenizer.defaultDelimiter(),
-							contextStack = args.contextStack || makeContextStack(),
-							parser = this,
-							token = null,
-							// Helper function to replace a token in the mustache template.
-							replaceToken = function (token, repl) {
-								template.replace({begin: token.start.value, end: token.end.value, repl: repl});
-							},
-							// Helper function to replace a token that can appear as standalone, in the mustache template.
-							replaceStandaloneToken = function (token, repl) {
-								trimStandaloneToken(token, template);
-								template.replace({begin: token.start.value, end: token.end.value, repl: repl});
-							},
+						token = tokenizer.next(delim);
+					}
 		
-							// The following functions are parsing helper functions.
-							//These functions will parse a particular type of mustache token.
+					throw new Error('Missing end-section for section : "' + beginToken.text + '" on line ' + beginToken.line);
+				};
 		
-							parseSetDelimiter = function (token) {
-								var temp, left, right;
+			return {
+				// Determines if the specified template actually contains mustache markup.
+				containsMarkup: function (template) {
+					var tokenizer = makeTokenizer(template),
+						token = tokenizer.next(),
+						isMustacheTemplate = false;
 		
-								if (token.value && token.value.indexOf('=') < 0) {
-									temp = token.value.split(' ');
-									left = temp[0];
-									right = temp[1];
+					// Iterate over each token in the template and parse accordingly.
+					while (token && !isMustacheTemplate) {
+						switch (token.type) {
+						case 'implicit':
+						case 'comment':
+						case 'set-delimiter':
+						case 'interpolation':
+						case 'unescape-interpolation':
+						case 'partial':
+						case 'section-begin':
+						case 'invert-section-begin':
+							isMustacheTemplate = true;
+							break;
+						}
 		
-									if (left.indexOf(' ') >= 0 || right.indexOf(' ') >= 0) {
-										throw new Error('Invalid custom delimiter: "' + token.text + '" on line ' + token.line);
-									}
+						token = tokenizer.next();
+					}
 		
-									delim.left = left;
-									delim.right = right;
+					return isMustacheTemplate;
+				},
+				// Retrieves all the referenced properites, without traversing the body
+				// of sections. The result is an array of property accessor objects
+				// with a get() and set() function that will retrieve the property
+				// and set the property respectively. This method is useful for performing
+				// inpsection of a mustache template, and to act on the properties in
+				// some fashion before a template is rendered.
+				getReferencedProperties: function (template, model, partials) {
+					var properties = [],
+						tokenizer = makeTokenizer(template),
+						delim = makeTokenizer.defaultDelimiter(),
+						token = tokenizer.next(delim),
+						contextStack = makeContextStack(model),
+						parser = this,
+						parseSetDelimiter = function (token) {
+							var temp, left, right;
 		
-									replaceStandaloneToken(token);
-								} else {
+							if (token.value && token.value.indexOf('=') < 0) {
+								temp = token.value.split(' ');
+								left = temp[0];
+								right = temp[1];
+		
+								if (left.indexOf(' ') >= 0 || right.indexOf(' ') >= 0) {
 									throw new Error('Invalid custom delimiter: "' + token.text + '" on line ' + token.line);
 								}
-							},
-							parseInterpolation = function (token) {
-								var temp = resolveNameOfInterpolation(token.value, contextStack, parser);
 		
-								if (temp) {
-									temp = util.htmlEscape(temp.toString());
-									replaceToken(token, temp);
-								} else {
-									replaceToken(token);
-								}
-							},
-							parseUnescapedInterpolation = function (token) {
-								var temp = resolveNameOfInterpolation(token.value, contextStack, parser);
+								delim.left = left;
+								delim.right = right;
+							} else {
+								throw new Error('Invalid custom delimiter: "' + token.text + '" on line ' + token.line);
+							}
+						},
+						parseSection = function (beginToken) {
+							var endToken = getEndSectionToken(beginToken, tokenizer, delim),
+								innerText = null,
+								data = null;
 		
-								if (temp) {
-									temp += '';
-									replaceToken(token, temp);
-								} else {
-									replaceToken(token);
-								}
-							},
-							parsePartial = function (token) {
-								var temp = '',
-									leading = trimStandaloneToken(token, template),
-									partialText = partials[token.value];
-		
-								if (partialText) {
-									// If there is whitespace leading the token then
-									// we use this leading as the indentation for the
-									// partial template. It's key to indent the partial
-									// template BEFORE it is parsed.
-									if (leading) {
-										partialText = util.indent(partialText, leading);
-									}
-		
-									// Now parse the partial template.
-									temp = parser.parse({
-										template: partialText,
-										data: data,
-										contextStack: contextStack,
-										partials: partials
-									});
-								}
-		
-								replaceToken(token, temp);
-							},
-							// This is a convenience function that looksahead to retrieve the
-							// ending section token for the specified section token.
-							getEndSectionToken = function (beginToken) {
-								var token = tokenizer.next(delim),
-									tokens = [];
-		
-								while (token) {
-									switch (token.type) {
-									case 'section-end':
-										if (tokens.length && token.value === tokens[tokens.length - 1].value) {
-											tokens.pop();
-										} else if (beginToken.value === token.value) {
-											if (!tokens.length) {
-												return token;
-											}
-		
-											throw new Error('Unbalanced sections encountered: "' + token.text + '" on line ' + token.line);
-										}
-										break;
-									case 'section-begin':
-									case 'invert-section-begin':
-										tokens.push(token);
-										break;
-									}
-		
-									token = tokenizer.next(delim);
-								}
-		
-								throw new Error('Missing end-section for section : "' + beginToken.text + '" on line ' + beginToken.line);
-							},
-							parseSection = function (beginToken) {
-								var endToken = getEndSectionToken(beginToken),
-									innerText = null,
-									data = null;
-		
-								if (!endToken) {
-									throw new Error('Unbalanced sections encountered: "' + beginToken.text + '" on line ' + beginToken.line);
-								}
-		
-								trimStandaloneToken(endToken, template);
-								trimStandaloneToken(beginToken, template);
-		
-								innerText = template.substring(beginToken.start + beginToken.text.length, endToken.end - endToken.text.length);
-								data = resolveNameOfSection(beginToken.value, innerText, contextStack, delim, partials, parser);
-		
-								if (typeof data === 'string') {
-									template.replace({
-										begin: beginToken.start,
-										end: endToken.end,
-										repl: data
-									});
-								} else if (!data || (util.isArray(data) && !data.length)) {
-									template.replace({
-										begin: beginToken.start,
-										end: endToken.end
-									});
-								} else {
-									template.replace({
-										begin: beginToken.start,
-										end: endToken.end,
-										repl: renderSection({
-											template: innerText,
-											data: data,
-											contextStack: contextStack,
-											partials: partials,
-											parser: parser,
-											delim: delim
-										})
-									});
-								}
-							},
-							parseInverseSection = function (beginToken) {
-								var endToken = getEndSectionToken(beginToken),
-									innerText = null,
-									data = null;
-		
-								if (!endToken) {
-									throw new Error('Unbalanced sections encountered: "' + beginToken.text + '" on line ' + beginToken.line);
-								}
-		
-								trimStandaloneToken(endToken, template);
-								trimStandaloneToken(beginToken, template);
-		
-								innerText = template.substring(beginToken.start + beginToken.text.length, endToken.end - endToken.text.length);
-								data = resolveNameOfInverseSection(beginToken.value, innerText, contextStack);
-		
-								if (!data || (util.isArray(data) && !data.length)) {
-									data = true;
-								} else {
-									data = false;
-								}
-		
-								if (!data || (util.isArray(data) && !data.length)) {
-									template.replace({
-										begin: beginToken.start,
-										end: endToken.end
-									});
-								} else {
-									template.replace({
-										begin: beginToken.start,
-										end: endToken.end,
-										repl: renderSection({
-											template: innerText,
-											data: data,
-											contextStack: contextStack,
-											partials: partials,
-											parser: parser,
-											delim: delim
-										})
-									});
-								}
-							};
-		
-						// Push our data onto our context stack.
-						contextStack.push(data);
-						token = tokenizer.next(delim);
-		
-						// Iterate over each token in the template and parse accordingly.
-						while (token) {
-							switch (token.type) {
-							case 'implicit':
-								replaceToken(token, data);
-								break;
-							case 'comment':
-								replaceStandaloneToken(token);
-								break;
-							case 'set-delimiter':
-								parseSetDelimiter(token);
-								break;
-							case 'interpolation':
-								parseInterpolation(token);
-								break;
-							case 'unescape-interpolation':
-								parseUnescapedInterpolation(token);
-								break;
-							case 'partial':
-								parsePartial(token);
-								break;
-							case 'section-begin':
-								parseSection(token);
-								break;
-							case 'invert-section-begin':
-								parseInverseSection(token);
-								break;
-							default:
-								throw new Error('Unexpected token: "' + token.text + '" on line ' + token.line);
+							if (!endToken) {
+								throw new Error('Unbalanced sections encountered: "' + beginToken.text + '" on line ' + beginToken.line);
 							}
 		
-							token = tokenizer.next(delim);
+							innerText = template.substring(beginToken.start + beginToken.text.length, endToken.end - endToken.text.length);
+							data = resolveNameOfSection(beginToken.value, innerText, contextStack, delim, partials, parser);
+		
+							return data;
+						},
+						makeImplicitAccessor = function () {
+							var value = contextStack.context();
+		
+							return {
+								get: function () {
+									return value;
+								},
+								set: function (value) {}
+							};
+						},
+						makeInterpolationAccessor = function (token) {
+							var pieces = token.value.split('.'),
+								name = pieces.pop(),
+								o = contextStack.context();
+		
+							if (pieces.length) {
+								o = resolveNameOfInterpolation(pieces.join('.'), contextStack, parser);
+							}
+		
+							return {
+								get: function () {
+									var ret;
+		
+									if (o !== undefined && o !== null) {
+										ret = o[name];
+									}
+		
+									return ret;
+								},
+								set: function (value) {
+									if (o !== undefined && o !== null) {
+										o[name] = value;
+									}
+								}
+							};
+						},
+						makeSectionAccessor = function (token) {
+							var pieces = token.value.split('.'),
+								name = pieces.pop(),
+								o = contextStack.context();
+		
+							if (pieces.length) {
+								token.value = pieces.join('.');
+								o = parseSection(token);
+								token.value += '.' + name;
+							}
+		
+							return {
+								get: function () {
+									var ret;
+		
+									if (o !== undefined && o !== null) {
+										ret = o[name];
+									}
+		
+									return ret;
+								},
+								set: function (value) {
+									if (o !== undefined && o !== null) {
+										o[name] = value;
+									}
+								}
+							};
+						};
+		
+					// Iterate over each token in the template and parse accordingly.
+					while (token) {
+						switch (token.type) {
+						case 'implicit':
+							properties.push(makeImplicitAccessor());
+							break;
+						case 'set-delimiter':
+							parseSetDelimiter(token, delim);
+							break;
+						case 'interpolation':
+						case 'unescape-interpolation':
+							properties.push(makeInterpolationAccessor(token));
+							break;
+						case 'section-begin':
+						case 'invert-section-begin':
+							properties.push(makeSectionAccessor(token));
+							break;
 						}
 		
-						contextStack.pop();
-		
-						// By this point the template has been completely parsed.
-						return template.toString();
+						token = tokenizer.next(delim);
 					}
-				};
+		
+					return properties;
+				},
+				makeParser: function () {
+					return {
+						// Parses a mustache template and returns the result as a string.
+						// The 'args' argument is an object with the following properties:
+						//
+						// template - the template string
+						// data - [OPTIONAL] the data or context to use for expansion
+						// partials - [OPTIONAL] a hash containing partial templates to be used in partial expansion
+						// delim - [OPTIONAL] the left and right delimters as: {left, right}
+						// contextStack - [INTERNAL USE ONLY] the context stack to use for this parse command
+						parse: function (args) {
+							var template = makeMutableString(args.template ? args.template.toString() : ''),
+								partials = args.partials || {},
+								data = args.data || {},
+								tokenizer = makeTokenizer(template),
+								delim = args.delim || tokenizer.defaultDelimiter(),
+								contextStack = args.contextStack || makeContextStack(),
+								parser = this,
+								token = null,
+								// Helper function to replace a token in the mustache template.
+								replaceToken = function (token, repl) {
+									template.replace({begin: token.start.value, end: token.end.value, repl: repl});
+								},
+								// Helper function to replace a token that can appear as standalone, in the mustache template.
+								replaceStandaloneToken = function (token, repl) {
+									trimStandaloneToken(token, template);
+									template.replace({begin: token.start.value, end: token.end.value, repl: repl});
+								},
+		
+								// The following functions are parsing helper functions.
+								//These functions will parse a particular type of mustache token.
+		
+								parseSetDelimiter = function (token) {
+									var temp, left, right;
+		
+									if (token.value && token.value.indexOf('=') < 0) {
+										temp = token.value.split(' ');
+										left = temp[0];
+										right = temp[1];
+		
+										if (left.indexOf(' ') >= 0 || right.indexOf(' ') >= 0) {
+											throw new Error('Invalid custom delimiter: "' + token.text + '" on line ' + token.line);
+										}
+		
+										delim.left = left;
+										delim.right = right;
+		
+										replaceStandaloneToken(token);
+									} else {
+										throw new Error('Invalid custom delimiter: "' + token.text + '" on line ' + token.line);
+									}
+								},
+								parseInterpolation = function (token) {
+									var temp = resolveNameOfInterpolation(token.value, contextStack, parser);
+		
+									if (temp) {
+										temp = util.htmlEscape(temp.toString());
+										replaceToken(token, temp);
+									} else {
+										replaceToken(token);
+									}
+								},
+								parseUnescapedInterpolation = function (token) {
+									var temp = resolveNameOfInterpolation(token.value, contextStack, parser);
+		
+									if (temp) {
+										temp += '';
+										replaceToken(token, temp);
+									} else {
+										replaceToken(token);
+									}
+								},
+								parsePartial = function (token) {
+									var temp = '',
+										leading = trimStandaloneToken(token, template),
+										partialText = partials[token.value];
+		
+									if (partialText) {
+										// If there is whitespace leading the token then
+										// we use this leading as the indentation for the
+										// partial template. It's key to indent the partial
+										// template BEFORE it is parsed.
+										if (leading) {
+											partialText = util.indent(partialText, leading);
+										}
+		
+										// Now parse the partial template.
+										temp = parser.parse({
+											template: partialText,
+											data: data,
+											contextStack: contextStack,
+											partials: partials
+										});
+									}
+		
+									replaceToken(token, temp);
+								},
+								parseSection = function (beginToken) {
+									var endToken = getEndSectionToken(beginToken, tokenizer, delim),
+										innerText = null,
+										data = null;
+		
+									if (!endToken) {
+										throw new Error('Unbalanced sections encountered: "' + beginToken.text + '" on line ' + beginToken.line);
+									}
+		
+									trimStandaloneToken(endToken, template);
+									trimStandaloneToken(beginToken, template);
+		
+									innerText = template.substring(beginToken.start + beginToken.text.length, endToken.end - endToken.text.length);
+									data = resolveNameOfSection(beginToken.value, innerText, contextStack, delim, partials, parser);
+		
+									if (typeof data === 'string') {
+										template.replace({
+											begin: beginToken.start,
+											end: endToken.end,
+											repl: data
+										});
+									} else if (!data || (util.isArray(data) && !data.length)) {
+										template.replace({
+											begin: beginToken.start,
+											end: endToken.end
+										});
+									} else {
+										template.replace({
+											begin: beginToken.start,
+											end: endToken.end,
+											repl: renderSection({
+												template: innerText,
+												data: data,
+												contextStack: contextStack,
+												partials: partials,
+												parser: parser,
+												delim: delim
+											})
+										});
+									}
+								},
+								parseInverseSection = function (beginToken) {
+									var endToken = getEndSectionToken(beginToken, tokenizer, delim),
+										innerText = null,
+										data = null;
+		
+									if (!endToken) {
+										throw new Error('Unbalanced sections encountered: "' + beginToken.text + '" on line ' + beginToken.line);
+									}
+		
+									trimStandaloneToken(endToken, template);
+									trimStandaloneToken(beginToken, template);
+		
+									innerText = template.substring(beginToken.start + beginToken.text.length, endToken.end - endToken.text.length);
+									data = resolveNameOfInverseSection(beginToken.value, innerText, contextStack);
+		
+									if (!data || (util.isArray(data) && !data.length)) {
+										data = true;
+									} else {
+										data = false;
+									}
+		
+									if (!data || (util.isArray(data) && !data.length)) {
+										template.replace({
+											begin: beginToken.start,
+											end: endToken.end
+										});
+									} else {
+										template.replace({
+											begin: beginToken.start,
+											end: endToken.end,
+											repl: renderSection({
+												template: innerText,
+												data: data,
+												contextStack: contextStack,
+												partials: partials,
+												parser: parser,
+												delim: delim
+											})
+										});
+									}
+								};
+		
+							// Push our data onto our context stack.
+							contextStack.push(data);
+							token = tokenizer.next(delim);
+		
+							// Iterate over each token in the template and parse accordingly.
+							while (token) {
+								switch (token.type) {
+								case 'implicit':
+									replaceToken(token, data);
+									break;
+								case 'comment':
+									replaceStandaloneToken(token);
+									break;
+								case 'set-delimiter':
+									parseSetDelimiter(token);
+									break;
+								case 'interpolation':
+									parseInterpolation(token);
+									break;
+								case 'unescape-interpolation':
+									parseUnescapedInterpolation(token);
+									break;
+								case 'partial':
+									parsePartial(token);
+									break;
+								case 'section-begin':
+									parseSection(token);
+									break;
+								case 'invert-section-begin':
+									parseInverseSection(token);
+									break;
+								default:
+									throw new Error('Unexpected token: "' + token.text + '" on line ' + token.line);
+								}
+		
+								token = tokenizer.next(delim);
+							}
+		
+							contextStack.pop();
+		
+							// By this point the template has been completely parsed.
+							return template.toString();
+						}
+					};
+				}
 			};
 		}(util, makeMutableString, makeTokenizer, makeContextStack)),
 		MUSTACHE = {
 			makeTokenizer: makeTokenizer,
-			containsMarkup: parser.containsMarkup,
+			containsMarkup: parsing.containsMarkup,
+			getReferencedProperties: parsing.getReferencedProperties,
 			render: function (template, data, partials) {
-				var parser = makerParser();
+				var parser = parsing.makeParser();
 
 				return parser.parse({
 					template: template,
