@@ -119,7 +119,11 @@ def create_js_module (task, templatePath)
 	task.prerequisites.each do |src|
 		filename = src.sub(/.*\/(.*)\.js/, '\1')
 		s = IO.read(src, encoding: ENCODING)
+		# Remove leading and trailing whitespace.
 		s.strip!()
+		# Remove all unecessary 'use strict' statements.
+		s.gsub!(/('|")use strict\1;?\s*/, '')
+		# Remove the trailing ';' character (if any).
 		s.slice!(-1) if s[-1] == ';'
 		pattern = /(((^[ \t]*)(var([ \t]+))?).*)?\{\{#{filename}\}\}/u
 		pattern =~ mod
