@@ -18,8 +18,6 @@
 			// interpolation, we use the empty character.
 			'': 'interpolation',
 			'&': 'unescape-interpolation',
-			// Alternate designator character for HTML/XML documents.
-			'~': 'unescape-interpolation',
 			// Use the '{' character to identify unescaped
 			// interpolation (i.e. tripple mustache).
 			'{': 'unescape-interpolation',
@@ -27,8 +25,6 @@
 			'^': 'invert-section-begin',
 			'/': 'section-end',
 			'>': 'partial',
-			// Alternate designator character for HTML/XML documents.
-			'@': 'partial',
 			'.': 'implicit'
 		},
 		// Makes a tokenizer that will tokenize the specified mustache template.

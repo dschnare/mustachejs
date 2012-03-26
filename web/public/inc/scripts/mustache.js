@@ -123,8 +123,6 @@ var MUSTACHE = (function () {
 					// interpolation, we use the empty character.
 					'': 'interpolation',
 					'&': 'unescape-interpolation',
-					// Alternate designator character for HTML/XML documents.
-					'~': 'unescape-interpolation',
 					// Use the '{' character to identify unescaped
 					// interpolation (i.e. tripple mustache).
 					'{': 'unescape-interpolation',
@@ -132,8 +130,6 @@ var MUSTACHE = (function () {
 					'^': 'invert-section-begin',
 					'/': 'section-end',
 					'>': 'partial',
-					// Alternate designator character for HTML/XML documents.
-					'@': 'partial',
 					'.': 'implicit'
 				},
 				// Makes a tokenizer that will tokenize the specified mustache template.
@@ -825,175 +821,6 @@ var MUSTACHE = (function () {
 				};
 		
 			return {
-				// Determines if the specified template actually contains mustache markup.
-				containsMarkup: function (template) {
-					var tokenizer = makeTokenizer(template),
-						token = tokenizer.next(),
-						isMustacheTemplate = false;
-		
-					// Iterate over each token in the template and parse accordingly.
-					while (token && !isMustacheTemplate) {
-						switch (token.type) {
-						case 'implicit':
-						case 'comment':
-						case 'set-delimiter':
-						case 'interpolation':
-						case 'unescape-interpolation':
-						case 'partial':
-						case 'section-begin':
-						case 'invert-section-begin':
-							isMustacheTemplate = true;
-							break;
-						}
-		
-						token = tokenizer.next();
-					}
-		
-					return isMustacheTemplate;
-				},
-				// Retrieves all the referenced properites, without traversing the body
-				// of sections. The result is an array of property accessor objects
-				// with a get() and set() function that will retrieve the property
-				// and set the property respectively. This method is useful for performing
-				// inpsection of a mustache template, and to act on the properties in
-				// some fashion before a template is rendered.
-				getReferencedProperties: function (template, model, partials) {
-					var properties = [],
-						tokenizer = makeTokenizer(template),
-						delim = makeTokenizer.defaultDelimiter(),
-						token = tokenizer.next(delim),
-						contextStack = makeContextStack(model),
-						parser = this,
-						parseSetDelimiter = function (token) {
-							var temp, left, right;
-		
-							if (token.value && token.value.indexOf('=') < 0) {
-								temp = token.value.split(' ');
-								left = temp[0];
-								right = temp[1];
-		
-								if (left.indexOf(' ') >= 0 || right.indexOf(' ') >= 0) {
-									throw new Error('Invalid custom delimiter: "' + token.text + '" on line ' + token.line);
-								}
-		
-								delim.left = left;
-								delim.right = right;
-							} else {
-								throw new Error('Invalid custom delimiter: "' + token.text + '" on line ' + token.line);
-							}
-						},
-						parseSection = function (beginToken) {
-							var endToken = getEndSectionToken(beginToken, tokenizer, delim),
-								innerText = null,
-								data = null;
-		
-							if (!endToken) {
-								throw new Error('Unbalanced sections encountered: "' + beginToken.text + '" on line ' + beginToken.line);
-							}
-		
-							innerText = template.substring(beginToken.start + beginToken.text.length, endToken.end - endToken.text.length);
-							data = resolveNameOfSection(beginToken.value, innerText, contextStack, delim, partials, parser);
-		
-							return data;
-						},
-						makeImplicitAccessor = function () {
-							var value = contextStack.context();
-		
-							return {
-								context: function () {
-									return undefined;
-								},
-								get: function () {
-									return value;
-								},
-								set: function (value) {}
-							};
-						},
-						makeInterpolationAccessor = function (token) {
-							var pieces = token.value.split('.'),
-								name = pieces.pop(),
-								o = contextStack.context();
-		
-							if (pieces.length) {
-								o = resolveNameOfInterpolation(pieces.join('.'), contextStack, parser);
-							}
-		
-							return {
-								context: function () {
-									return o;
-								},
-								get: function () {
-									var ret;
-		
-									if (o !== undefined && o !== null) {
-										ret = o[name];
-									}
-		
-									return ret;
-								},
-								set: function (value) {
-									if (o !== undefined && o !== null) {
-										o[name] = value;
-									}
-								}
-							};
-						},
-						makeSectionAccessor = function (token) {
-							var pieces = token.value.split('.'),
-								name = pieces.pop(),
-								o = contextStack.context();
-		
-							if (pieces.length) {
-								token.value = pieces.join('.');
-								o = parseSection(token);
-								token.value += '.' + name;
-							}
-		
-							return {
-								context: function () {
-									return o;
-								},
-								get: function () {
-									var ret;
-		
-									if (o !== undefined && o !== null) {
-										ret = o[name];
-									}
-		
-									return ret;
-								},
-								set: function (value) {
-									if (o !== undefined && o !== null) {
-										o[name] = value;
-									}
-								}
-							};
-						};
-		
-					// Iterate over each token in the template and parse accordingly.
-					while (token) {
-						switch (token.type) {
-						case 'implicit':
-							properties.push(makeImplicitAccessor());
-							break;
-						case 'set-delimiter':
-							parseSetDelimiter(token, delim);
-							break;
-						case 'interpolation':
-						case 'unescape-interpolation':
-							properties.push(makeInterpolationAccessor(token));
-							break;
-						case 'section-begin':
-						case 'invert-section-begin':
-							properties.push(makeSectionAccessor(token));
-							break;
-						}
-		
-						token = tokenizer.next(delim);
-					}
-		
-					return properties;
-				},
 				makeParser: function () {
 					return {
 						// Parses a mustache template and returns the result as a string.
@@ -1222,9 +1049,6 @@ var MUSTACHE = (function () {
 			};
 		}(util, makeMutableString, makeTokenizer, makeContextStack)),
 		MUSTACHE = {
-			makeTokenizer: makeTokenizer,
-			containsMarkup: parsing.containsMarkup,
-			getReferencedProperties: parsing.getReferencedProperties,
 			render: function (template, data, partials) {
 				var parser = parsing.makeParser();
 
