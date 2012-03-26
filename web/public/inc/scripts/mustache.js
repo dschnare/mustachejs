@@ -9,8 +9,6 @@ var MUSTACHE = (function () {
 
 	var k = null,
 		util = (function () {
-			'use strict';
-		
 			// The util object represents a set of utilitarian functions.
 		
 			return {
@@ -104,8 +102,6 @@ var MUSTACHE = (function () {
 			};
 		}()),
 		makeTokenizer = (function (util) {
-			'use strict';
-		
 			/*jslint 'continue': true*/
 			/*global 'util'*/
 		
@@ -308,8 +304,6 @@ var MUSTACHE = (function () {
 			return makeTokenizer;
 		}(util)),
 		makeMutableString = (function () {
-			'use strict';
-		
 			// This represents a mutable string. The mutable string
 			// has several string-like operators, but has the ability
 			// to be modified via the replace() method.
@@ -464,8 +458,6 @@ var MUSTACHE = (function () {
 			};
 		}()),
 		makeContextStack = (function () {
-			'use strict';
-		
 			// This represents a the context stack that keeps track of the current
 			// context and any 'child' contexts.
 		
@@ -521,8 +513,6 @@ var MUSTACHE = (function () {
 			};
 		}()),
 		parsing = (function (util, makeMutableString, makeTokenizer, makeContextStack) {
-			'use strict';
-		
 			/*global 'util', 'makeMutableString', 'makeTokenizer', 'makeContextStack'*/
 		
 			// This represents a mustache parser/interpreter.
