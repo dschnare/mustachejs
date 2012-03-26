@@ -1247,7 +1247,9 @@ var MUSTACHE = (function () {
 	} else if (typeof exports !== 'undefined') {
 
 		for (k in MUSTACHE) {
-			exports[k] = MUSTACHE[k];
+			if (MUSTACHE.hasOwnProperty(k)) {
+				exports[k] = MUSTACHE[k];
+			}
 		}
 		MUSTACHE = undefined;
 	}
