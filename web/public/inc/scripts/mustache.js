@@ -1051,7 +1051,7 @@ var MUSTACHE = (function () {
 		};
 
 	// Asynchronous modules (AMD) supported.
-	if (typeof define === 'function' && typeof define.amd === 'object') {
+	if (typeof define === 'function' && typeof define.amd === 'object' && define.amd) {
 		define(MUSTACHE);
 		MUSTACHE = undefined;
 	// Nodejs/CommonJS modules supported.
