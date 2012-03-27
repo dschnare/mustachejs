@@ -1051,15 +1051,11 @@ var MUSTACHE = (function () {
 		};
 
 	// Asynchronous modules (AMD) supported.
-	if (typeof define === 'function' &&
-		typeof define.amd === 'object') {
-
+	if (typeof define === 'function' && typeof define.amd === 'object') {
 		define(MUSTACHE);
 		MUSTACHE = undefined;
-
 	// Nodejs/CommonJS modules supported.
-	} else if (typeof exports !== 'undefined') {
-
+	} else if (typeof exports === 'object' && exports && typeof require === 'function') {
 		for (k in MUSTACHE) {
 			if (MUSTACHE.hasOwnProperty(k)) {
 				exports[k] = MUSTACHE[k];
