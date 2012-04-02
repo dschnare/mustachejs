@@ -56,6 +56,7 @@
 					// Resolution failed.
 					} else {
 						data = '';
+						break;
 					}
 				}
 			}
@@ -92,6 +93,7 @@
 					// Resolution failed.
 					} else {
 						data = '';
+						break;
 					}
 				}
 			}
@@ -128,6 +130,7 @@
 					// Resolution failed.
 					} else {
 						data = '';
+						break;
 					}
 				}
 			}

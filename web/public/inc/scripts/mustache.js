@@ -568,6 +568,7 @@ var MUSTACHE = (function () {
 							// Resolution failed.
 							} else {
 								data = '';
+								break;
 							}
 						}
 					}
@@ -604,6 +605,7 @@ var MUSTACHE = (function () {
 							// Resolution failed.
 							} else {
 								data = '';
+								break;
 							}
 						}
 					}
@@ -640,6 +642,7 @@ var MUSTACHE = (function () {
 							// Resolution failed.
 							} else {
 								data = '';
+								break;
 							}
 						}
 					}
