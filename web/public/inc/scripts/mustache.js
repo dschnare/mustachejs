@@ -463,6 +463,11 @@ var MUSTACHE = (function () {
 		
 			return function (o) {
 				var stack = [{}],
+					bind = function (fn, thisObj) {
+						return function () {
+							return fn.apply(thisObj, arguments);
+						};
+					},
 					ctxStack = {
 						// Retrieves the current context (i.e. top of the stack).
 						context: function () {
@@ -472,17 +477,25 @@ var MUSTACHE = (function () {
 						// for an object with the specified key. If no key exists
 						// in all contexts then returns undefined.
 						get: function (key) {
-							var i = stack.length;
+							var i = stack.length, o, p, ret;
 		
 							while (i) {
 								i -= 1;
+								o = stack[i];
+								p = o[key];
 		
-								if (stack[i][key] !== undefined) {
-									return stack[i][key];
+								if (p !== undefined) {
+									if (typeof p === 'function') {
+										ret = bind(p, o);
+										break;
+									} else {
+										ret = p;
+										break;
+									}
 								}
 							}
 		
-							return undefined;
+							return ret;
 						},
 						// Pushes a new object onty the stack.
 						// This object is now the current context.
