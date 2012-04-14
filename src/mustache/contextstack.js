@@ -17,15 +17,15 @@
 					return stack[stack.length - 1];
 				},
 				// Traverses the stack, starting from the top, looking
-				// for an object with the specified key. If no key exists
-				// in all contexts then returns undefined.
-				get: function (key) {
+				// for an object with the specified kenamey. If no name exists
+				// in any context then returns undefined.
+				get: function (name) {
 					var i = stack.length, o, p, ret;
 
 					while (i) {
 						i -= 1;
 						o = stack[i];
-						p = o[key];
+						p = o[name];
 
 						if (p !== undefined) {
 							if (typeof p === 'function') {
@@ -39,6 +39,22 @@
 					}
 
 					return ret;
+				},
+				// Traverses the stack, starting from the top, looking
+				// for an object with the specified name. If no name exists
+				// in any context then returns undefined. Otherwise
+				// returns the context that has name.
+				getContext: function (name) {
+					var i = stack.length, o;
+
+					while (i) {
+						i -= 1;
+						o = stack[i];
+
+						if (o[name] !== undefined) {
+							return o;
+						}
+					}
 				},
 				// Pushes a new object onty the stack.
 				// This object is now the current context.

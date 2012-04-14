@@ -41,7 +41,8 @@ $(function () {
 										}
 
 										return function() {
-											unit.expect(desc, MUSTACHE.render(template, data, partials) == expected);
+											var rendered = MUSTACHE.render(template, data, partials);
+											unit.expect(desc + '  RENDERED:[' + rendered + ']', rendered == expected);
 										};
 									}(test.desc, test.template, test.data, test.partials, test.expected));
 								}

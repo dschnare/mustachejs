@@ -13,51 +13,57 @@
 	var resolveNameOfSection = function (name, sectionText, contextStack, delim, partials, parser) {
 			var names = name.split('.'),
 				i = 0,
-				data = contextStack.get(name),
+				data,
+				ctx,
 				len = names.length,
 				ctxStack = contextStack;
 
 			sectionText = sectionText.toString();
 
-			if (typeof data === 'function') {
-				// When used as the data value for an Interpolation tag, the lambda MUST be
-				// treatable as an arity 0 function, and invoked as such.  The returned value
-				// MUST be rendered against the default delimiters, then interpolated in place
-				// of the lambda. -- https://github.com/mustache/spec/blob/master/specs/~lambdas.yml
-				//if (data.length === 1) {
-				data = parser.parse({
-					template: data.call(undefined, sectionText),
-					data: contextStack.context(),
-					partials: partials,
-					delim: delim
-				});
-				/*} else {
-					data = parser.parse({
-						template: data.call(undefined),
-						data: contextStack.context(),
-						partials: partials
-					});
-				}*/
-			} else {
-				for (i = 0; i < len; i += 1) {
-					name = names[i];
-					data = ctxStack.get(name);
+			for (i = 0; i < len - 1; i += 1) {
+				name = names[i];
+				ctx = ctxStack.getContext(name);
 
-					if (data !== undefined) {
-						if (typeof data === 'function') {
-							if (data.length === 1 || data.length === 2) {
-								data = data.call(undefined, sectionText);
-							} else {
-								data = data.call(undefined);
-							}
+				// Resolution failed.
+				if (ctx === undefined) {
+					data = '';
+					break;
+				} else {
+					data = ctx[name];
+
+					if (typeof data === 'function') {
+						if (data.length === 1) {
+							data = data.call(ctx, sectionText);
+						} else {
+							data = data.call(ctx);
 						}
-
-						ctxStack = makeContextStack(data);
-					// Resolution failed.
-					} else {
-						data = '';
-						break;
 					}
+
+					ctxStack = makeContextStack(data);
+				}
+			}
+
+			// Lambdas:
+			// When used as the data value for a Section tag, the lambda MUST be treatable
+			// as an arity 1 function, and invoked as such (passing a String containing the
+			// unprocessed section contents).  The returned value MUST be rendered against
+			// the current delimiters, then interpolated in place of the section.
+			name = names[len - 1];
+			ctx = ctxStack.getContext(name);
+
+			// Resolution failed.
+			if (ctx === undefined) {
+				data = '';
+			} else {
+				data = ctx[name];
+
+				if (typeof data === 'function') {
+					data = parser.parse({
+						template: data.call(ctx, sectionText),
+						data: contextStack.context(),
+						partials: partials,
+						delim: delim
+					});
 				}
 			}
 
@@ -67,34 +73,52 @@
 		resolveNameOfInverseSection = function (name, sectionText, contextStack) {
 			var names = name.split('.'),
 				i = 0,
-				data = contextStack.get(name),
+				data,
+				ctx,
 				len = names.length,
 				ctxStack = contextStack;
 
 			sectionText = sectionText.toString();
 
-			if (typeof data === 'function') {
-				data = true;
-			} else {
-				for (i = 0; i < len; i += 1) {
-					name = names[i];
-					data = ctxStack.get(name);
+			for (i = 0; i < len - 1; i += 1) {
+				name = names[i];
+				ctx = ctxStack.getContext(name);
 
-					if (data !== undefined) {
-						if (typeof data === 'function') {
-							if (data.length === 1 || data.length === 2) {
-								data = data.call(undefined, sectionText);
-							} else {
-								data = data.call(undefined);
-							}
+				// Resolution failed.
+				if (ctx === undefined) {
+					data = '';
+					break;
+				} else {
+					data = ctx[name];
+
+					if (typeof data === 'function') {
+						if (data.length === 1) {
+							data = data.call(ctx, sectionText);
+						} else {
+							data = data.call(ctx);
 						}
-
-						ctxStack = makeContextStack(data);
-					// Resolution failed.
-					} else {
-						data = '';
-						break;
 					}
+
+					ctxStack = makeContextStack(data);
+				}
+			}
+
+			// Lambdas:
+			// When used as the data value for a Section tag, the lambda MUST be treatable
+			// as an arity 1 function, and invoked as such (passing a String containing the
+			// unprocessed section contents).  The returned value MUST be rendered against
+			// the current delimiters, then interpolated in place of the section.
+			name = names[len - 1];
+			ctx = ctxStack.getContext(name);
+
+			// Resolution failed.
+			if (ctx === undefined) {
+				data = '';
+			} else {
+				data = ctx[name];
+
+				if (typeof data === 'function') {
+					data = true;
 				}
 			}
 
@@ -104,34 +128,50 @@
 		resolveNameOfInterpolation = function (name, contextStack, parser) {
 			var names = name.split('.'),
 				i = 0,
-				data = contextStack.get(name),
+				data,
+				ctx,
 				len = names.length,
 				ctxStack = contextStack;
 
-			if (typeof data === 'function') {
-				data = parser.parse({
-					template: data.call(undefined),
-					data: contextStack.context(),
-					partials: {}
-				});
-			} else if (name === '.') {
-				data = contextStack.context();
-			} else {
-				for (i = 0; i < len; i += 1) {
-					name = names[i];
-					data = ctxStack.get(name);
+			for (i = 0; i < len - 1; i += 1) {
+				name = names[i];
+				ctx = ctxStack.getContext(name);
 
-					if (data !== undefined) {
-						if (typeof data === 'function') {
-							data = data();
-						}
+				// Resolution failed.
+				if (ctx === undefined) {
+					data = '';
+					break;
+				} else {
+					data = ctx[name];
 
-						ctxStack = makeContextStack(data);
-					// Resolution failed.
-					} else {
-						data = '';
-						break;
+					if (typeof data === 'function') {
+						data = data.call(ctx);
 					}
+
+					ctxStack = makeContextStack(data);
+				}
+			}
+
+			// Lambdas:
+			// When used as the data value for an Interpolation tag, the lambda MUST be
+			// treatable as an arity 0 function, and invoked as such.  The returned value
+			// MUST be rendered against the default delimiters, then interpolated in place
+			// of the lambda.
+			name = names[len - 1];
+			ctx = ctxStack.getContext(name);
+
+			// Resolution failed.
+			if (ctx === undefined) {
+				data = '';
+			} else {
+				data = ctx[name];
+
+				if (typeof data === 'function') {
+					data = parser.parse({
+						template: data.call(ctx),
+						data: contextStack.context(),
+						partials: {}
+					});
 				}
 			}
 
