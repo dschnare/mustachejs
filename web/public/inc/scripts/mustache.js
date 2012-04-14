@@ -602,6 +602,7 @@ var MUSTACHE = (function () {
 							data = parser.parse({
 								template: data.call(ctx, sectionText),
 								data: contextStack.context(),
+								contextStack: contextStack,
 								partials: partials,
 								delim: delim
 							});
@@ -666,7 +667,7 @@ var MUSTACHE = (function () {
 					return data;
 				},
 				// Perform name resolution for interpolation tokens.
-				resolveNameOfInterpolation = function (name, contextStack, parser) {
+				resolveNameOfInterpolation = function (name, contextStack, partials, parser) {
 					var names = name.split('.'),
 						i = 0,
 						data,
@@ -711,7 +712,8 @@ var MUSTACHE = (function () {
 							data = parser.parse({
 								template: data.call(ctx),
 								data: contextStack.context(),
-								partials: {}
+								contextStack: contextStack,
+								partials: partials
 							});
 						}
 					}
@@ -936,7 +938,7 @@ var MUSTACHE = (function () {
 									}
 								},
 								parseInterpolation = function (token) {
-									var temp = resolveNameOfInterpolation(token.value, contextStack, parser);
+									var temp = resolveNameOfInterpolation(token.value, contextStack, partials, parser);
 		
 									if (temp) {
 										temp = util.htmlEscape(temp.toString());
@@ -946,7 +948,7 @@ var MUSTACHE = (function () {
 									}
 								},
 								parseUnescapedInterpolation = function (token) {
-									var temp = resolveNameOfInterpolation(token.value, contextStack, parser);
+									var temp = resolveNameOfInterpolation(token.value, contextStack, partials, parser);
 		
 									if (temp) {
 										temp += '';
@@ -1071,6 +1073,14 @@ var MUSTACHE = (function () {
 							while (token) {
 								switch (token.type) {
 								case 'implicit':
+									if (typeof data === 'function') {
+										data = parser.parse({
+											template: data(),
+											data: contextStack.context(),
+											contextStack: contextStack,
+											partials: partials
+										});
+									}
 									replaceToken(token, data);
 									break;
 								case 'comment':

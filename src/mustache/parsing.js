@@ -61,6 +61,7 @@
 					data = parser.parse({
 						template: data.call(ctx, sectionText),
 						data: contextStack.context(),
+						contextStack: contextStack,
 						partials: partials,
 						delim: delim
 					});
@@ -125,7 +126,7 @@
 			return data;
 		},
 		// Perform name resolution for interpolation tokens.
-		resolveNameOfInterpolation = function (name, contextStack, parser) {
+		resolveNameOfInterpolation = function (name, contextStack, partials, parser) {
 			var names = name.split('.'),
 				i = 0,
 				data,
@@ -170,7 +171,8 @@
 					data = parser.parse({
 						template: data.call(ctx),
 						data: contextStack.context(),
-						partials: {}
+						contextStack: contextStack,
+						partials: partials
 					});
 				}
 			}
@@ -395,7 +397,7 @@
 							}
 						},
 						parseInterpolation = function (token) {
-							var temp = resolveNameOfInterpolation(token.value, contextStack, parser);
+							var temp = resolveNameOfInterpolation(token.value, contextStack, partials, parser);
 
 							if (temp) {
 								temp = util.htmlEscape(temp.toString());
@@ -405,7 +407,7 @@
 							}
 						},
 						parseUnescapedInterpolation = function (token) {
-							var temp = resolveNameOfInterpolation(token.value, contextStack, parser);
+							var temp = resolveNameOfInterpolation(token.value, contextStack, partials, parser);
 
 							if (temp) {
 								temp += '';
@@ -530,6 +532,14 @@
 					while (token) {
 						switch (token.type) {
 						case 'implicit':
+							if (typeof data === 'function') {
+								data = parser.parse({
+									template: data(),
+									data: contextStack.context(),
+									contextStack: contextStack,
+									partials: partials
+								});
+							}
 							replaceToken(token, data);
 							break;
 						case 'comment':
