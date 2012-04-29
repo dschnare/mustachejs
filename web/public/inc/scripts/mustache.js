@@ -318,6 +318,7 @@ var MUSTACHE = (function () {
 										end: pointer(+i),
 										line: line
 									};
+		
 									break;
 								// No delimiter found so we read characters
 								// until we find a delimiter and return a text token.
@@ -337,7 +338,11 @@ var MUSTACHE = (function () {
 										line: line
 									};
 		
-									break;
+									if (token.text) {
+										break;
+									} else {
+										token = null;
+									}
 								}
 							}
 		
@@ -678,13 +683,13 @@ var MUSTACHE = (function () {
 									// We throw an error if section tokens are unballenced.
 									while (endToken) {
 										switch (endToken.type) {
-											case 'section-begin':
-											case 'invert-section-begin':
-												openSection.open(endToken);
-												break;
-											case 'section-end':
-												openSection.close(endToken);
-												break;
+										case 'section-begin':
+										case 'invert-section-begin':
+											openSection.open(endToken);
+											break;
+										case 'section-end':
+											openSection.close(endToken);
+											break;
 										}
 		
 										if (token.endToken) {
@@ -719,6 +724,7 @@ var MUSTACHE = (function () {
 			// according to the official mustache specification.
 		
 			var internalInterpreter,
+				nativeValueOf = ({}).valueOf,
 				resolvers = {
 					// {name, contextStack, partials}
 					interpolation: function (args) {
@@ -743,7 +749,11 @@ var MUSTACHE = (function () {
 							} else {
 								data = ctx[name];
 		
-								if (typeof data === 'function') {
+								// If the data has its own valueOf() implementation then
+								// we respect it and convert the data using its valueOf() method.
+								if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
+									data = data.valueOf();
+								} else if (typeof data === 'function') {
 									data = data.call(ctx);
 								}
 		
@@ -765,7 +775,11 @@ var MUSTACHE = (function () {
 						} else {
 							data = ctx[name];
 		
-							if (typeof data === 'function') {
+							// If the data has its own valueOf() implementation then
+							// we respect it and convert the data using its valueOf() method.
+							if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
+								data = data.valueOf();
+							} else if (typeof data === 'function') {
 								data = internalInterpreter.interpret({
 									template: data.call(ctx),
 									data: contextStack.context(),
@@ -804,7 +818,11 @@ var MUSTACHE = (function () {
 							} else {
 								data = ctx[name];
 		
-								if (typeof data === 'function') {
+								// If the data has its own valueOf() implementation then
+								// we respect it and convert the data using its valueOf() method.
+								if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
+									data = data.valueOf();
+								} else if (typeof data === 'function') {
 									if (data.length === 1) {
 										data = data.call(ctx, sectionText);
 									} else {
@@ -830,7 +848,11 @@ var MUSTACHE = (function () {
 						} else {
 							data = ctx[name];
 		
-							if (typeof data === 'function') {
+							// If the data has its own valueOf() implementation then
+							// we respect it and convert the data using its valueOf() method.
+							if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
+								data = data.valueOf();
+							} else if (typeof data === 'function') {
 								data = internalInterpreter.interpret({
 									template: data.call(ctx, sectionText),
 									data: contextStack.context(),
@@ -868,7 +890,11 @@ var MUSTACHE = (function () {
 							} else {
 								data = ctx[name];
 		
-								if (typeof data === 'function') {
+								// If the data has its own valueOf() implementation then
+								// we respect it and convert the data using its valueOf() method.
+								if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
+									data = data.valueOf();
+								} else if (typeof data === 'function') {
 									if (data.length === 1) {
 										data = data.call(ctx, sectionText);
 									} else {

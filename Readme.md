@@ -85,6 +85,36 @@ The entire Mustache [specification](https://github.com/mustache/spec) and syntax
 Partials can not only be referenced as usual; `{{>partial-name}}`, but also like `{{@partial-name}}`.
 Unescaped interpolations can not only be referenced as usual; `{{&property}}`, but also like `{{~property}}`.
 
+# Custom valueOf() method
+
+If any object encountered by mustachejs has a custom `valueOf` implementation then it will be used to convert the object into a value.
+
+	var M = MUSTACHE,
+			template = '{{message}}, age:{{age}}',
+			model = {
+				message: {
+					toString: function () {
+						return 'Hello World!';
+					}
+				},
+				age: function () {
+					return 29;
+				}
+			};
+
+		model.age.valueOf = function () {
+			return 30;
+		};
+
+		// Writes: {{message}}, age:{{age}} | Hello World!, age:30
+		console.log(template, '|', M.render(template, model));
+
+		// Removing the custom valueOf() method on our age() method
+		// will result in age() being invoked normally.
+		delete model.age.valueOf;
+		// Writes: {{message}}, age:{{age}} | Hello World!, age:29
+		console.log(template, '|', M.render(template, model));
+
 # API
 
 The mustachejs module exposes a simple API.

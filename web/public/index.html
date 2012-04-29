@@ -9,14 +9,26 @@
 		<script type="text/javascript" src="inc/scripts/mustache.js"></script>
 		<script type="text/javascript">
 			var M = MUSTACHE,
-				t = M.makeMutableString('{{#test}}body{{/test}}{{#test2}}body2{{/test2}}'),
-				p = M.makeParser(t),
-				token = p.next();
+				template = '{{message}}, age:{{age}}',
+				model = {
+					message: {
+						toString: function () {
+							return 'Hello World!';
+						}
+					},
+					age: function () {
+						return 29;
+					}
+				};
 
-			while (token) {
-				console.log('token:', token);
-				token = p.next();
+			model.age.valueOf = function () {
+				return 30;
 			}
+
+			console.log(template, '|', M.render(template, model));
+
+			delete model.age.valueOf;
+			console.log(template, '|', M.render(template, model));
 		</script>
 	</body>
 </html>

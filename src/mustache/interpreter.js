@@ -11,6 +11,7 @@
 	// according to the official mustache specification.
 
 	var internalInterpreter,
+		nativeValueOf = ({}).valueOf,
 		resolvers = {
 			// {name, contextStack, partials}
 			interpolation: function (args) {
@@ -35,7 +36,11 @@
 					} else {
 						data = ctx[name];
 
-						if (typeof data === 'function') {
+						// If the data has its own valueOf() implementation then
+						// we respect it and convert the data using its valueOf() method.
+						if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
+							data = data.valueOf();
+						} else if (typeof data === 'function') {
 							data = data.call(ctx);
 						}
 
@@ -57,7 +62,11 @@
 				} else {
 					data = ctx[name];
 
-					if (typeof data === 'function') {
+					// If the data has its own valueOf() implementation then
+					// we respect it and convert the data using its valueOf() method.
+					if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
+						data = data.valueOf();
+					} else if (typeof data === 'function') {
 						data = internalInterpreter.interpret({
 							template: data.call(ctx),
 							data: contextStack.context(),
@@ -96,7 +105,11 @@
 					} else {
 						data = ctx[name];
 
-						if (typeof data === 'function') {
+						// If the data has its own valueOf() implementation then
+						// we respect it and convert the data using its valueOf() method.
+						if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
+							data = data.valueOf();
+						} else if (typeof data === 'function') {
 							if (data.length === 1) {
 								data = data.call(ctx, sectionText);
 							} else {
@@ -122,7 +135,11 @@
 				} else {
 					data = ctx[name];
 
-					if (typeof data === 'function') {
+					// If the data has its own valueOf() implementation then
+					// we respect it and convert the data using its valueOf() method.
+					if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
+						data = data.valueOf();
+					} else if (typeof data === 'function') {
 						data = internalInterpreter.interpret({
 							template: data.call(ctx, sectionText),
 							data: contextStack.context(),
@@ -160,7 +177,11 @@
 					} else {
 						data = ctx[name];
 
-						if (typeof data === 'function') {
+						// If the data has its own valueOf() implementation then
+						// we respect it and convert the data using its valueOf() method.
+						if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
+							data = data.valueOf();
+						} else if (typeof data === 'function') {
 							if (data.length === 1) {
 								data = data.call(ctx, sectionText);
 							} else {

@@ -83,13 +83,13 @@
 							// We throw an error if section tokens are unballenced.
 							while (endToken) {
 								switch (endToken.type) {
-									case 'section-begin':
-									case 'invert-section-begin':
-										openSection.open(endToken);
-										break;
-									case 'section-end':
-										openSection.close(endToken);
-										break;
+								case 'section-begin':
+								case 'invert-section-begin':
+									openSection.open(endToken);
+									break;
+								case 'section-end':
+									openSection.close(endToken);
+									break;
 								}
 
 								if (token.endToken) {

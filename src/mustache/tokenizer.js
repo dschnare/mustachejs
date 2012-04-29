@@ -217,6 +217,7 @@
 								end: pointer(+i),
 								line: line
 							};
+
 							break;
 						// No delimiter found so we read characters
 						// until we find a delimiter and return a text token.
@@ -236,7 +237,11 @@
 								line: line
 							};
 
-							break;
+							if (token.text) {
+								break;
+							} else {
+								token = null;
+							}
 						}
 					}
 
