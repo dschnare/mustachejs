@@ -6,7 +6,7 @@ require 'uri'
 
 #Just redirect to the test page.
 get '/' do
-	redirect to('/test.html')
+	redirect to('/index.html')
 end
 
 =begin

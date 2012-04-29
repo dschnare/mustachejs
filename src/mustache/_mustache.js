@@ -6,16 +6,12 @@ var MUSTACHE = (function () {
 		makeTokenizer = {{tokenizer}},
 		makeMutableString = {{mutablestring}},
 		makeContextStack = {{contextstack}},
-		parsing = {{parsing}},
+		makeParser = {{parser}},
+		makeInterpreter = {{interpreter}},
 		MUSTACHE = {
 			render: function (template, data, partials) {
-				var parser = parsing.makeParser();
-
-				return parser.parse({
-					template: template,
-					data: data,
-					partials: partials
-				});
+				var interpreter = makeInterpreter();
+				return interpreter.interpret(template, data, partials);
 			}
 		};
 

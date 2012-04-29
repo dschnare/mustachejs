@@ -42,7 +42,7 @@ $(function () {
 
 										return function() {
 											var rendered = MUSTACHE.render(template, data, partials);
-											unit.expect(desc + '  RENDERED:[' + rendered + ']', rendered == expected);
+											unit.expect(desc + '  RENDERED:[' + rendered + ']  TEMPLTE:[' + template + ']', rendered == expected);
 										};
 									}(test.desc, test.template, test.data, test.partials, test.expected));
 								}

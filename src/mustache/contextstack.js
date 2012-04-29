@@ -17,7 +17,7 @@
 					return stack[stack.length - 1];
 				},
 				// Traverses the stack, starting from the top, looking
-				// for an object with the specified kenamey. If no name exists
+				// for an object with the specified key name. If no name exists
 				// in any context then returns undefined.
 				get: function (name) {
 					var i = stack.length, o, p, ret;

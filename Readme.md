@@ -78,6 +78,13 @@ Browsers and environments will be added to this list as testing ensues.
 - [AMD Module](https://github.com/dschnare/definejs)
 
 
+# Syntax
+
+The entire Mustache [specification](https://github.com/mustache/spec) and syntax is fully supported, including lambdas. However, the mustache syntax has been extended to support alternate forms for `unescaped-interpolation` and `partials`. This extended form is added to support mixing mustache tempaltes with XML/HTML documents.
+
+Partials can not only be referenced as usual; `{{>partial-name}}`, but also like `{{@partial-name}}`.
+Unescaped interpolations can not only be referenced as usual; `{{&property}}`, but also like `{{~property}}`.
+
 # API
 
 The mustachejs module exposes a simple API.

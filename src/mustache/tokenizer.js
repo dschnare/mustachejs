@@ -18,6 +18,9 @@
 			// interpolation, we use the empty character.
 			'': 'interpolation',
 			'&': 'unescape-interpolation',
+			// Alternate syntax for unescaped interpolation.
+			// Useful if templates are mixed with XML/HTML.
+			'~': 'unescape-interpolation',
 			// Use the '{' character to identify unescaped
 			// interpolation (i.e. tripple mustache).
 			'{': 'unescape-interpolation',
@@ -25,13 +28,17 @@
 			'^': 'invert-section-begin',
 			'/': 'section-end',
 			'>': 'partial',
+			// Alternate syntax for partials.
+			// Useful if templates are mixed with XML/HTML.
+			'@': 'partial',
 			'.': 'implicit'
+			// We also create 'text' tokens (i.e. anything other than mustache tokens).
 		},
 		// Makes a tokenizer that will tokenize the specified mustache template.
 		// The tokenizer will only tokenize on an as-needed basis by calling next().
 		// The next() method will return null if there are no more tokens available.
-		makeTokenizer = function (str) {
-			var pointer = typeof str.pointer === 'function' ? function (index) { return str.pointer(index); } : function (index) {
+		makeTokenizer = function (template) {
+			var pointer = typeof template.pointer === 'function' ? function (index) { return template.pointer(index); } : function (index) {
 					return {
 						value: index,
 						toString: function () {
@@ -48,19 +55,46 @@
 				next = function (step) {
 					if (step !== 0) {
 						i.value += (step || 1);
-						c = str.charAt(+i);
+						c = template.charAt(+i);
 					}
 
 					return c;
 				},
 				lookahead = function (count) {
-					return str.substr(+i, count);
+					return template.substr(+i, count);
 				};
 
 			return {
-				// Retrive an object with the default mustache delimiters.
-				defaultDelimiter: function () {
-					return makeTokenizer.defaultDelimiter();
+				// Get/set the current position the tokenizer is at in the template.
+				position: function (index) {
+					index = +index;
+
+					if (isFinite(index)) {
+						i.value = index;
+					}
+
+					return +i;
+				},
+				// Retrieves all the tokens in the template starting from the begining of the template.
+				getTokens: function (delim) {
+					var savedPosition = i.value,
+						savedLine = line,
+						token,
+						tokens = [];
+
+					line = 1;
+					i.value = 0;
+					token = this.next(delim);
+
+					while (token) {
+						tokens.push(token);
+						token = this.next(delim);
+					}
+
+					line = savedLine;
+					i.value = savedPosition;
+
+					return tokens;
 				},
 				// Retrieve the next mustache token using the specified delimiters.
 				// The delim argument must be an object of the form: {left:'{{', right:'}}'}
@@ -74,6 +108,7 @@
 						modifier = '',
 						start = -1,
 						tokenType = null,
+						token = null,
 						delimleft = delim.left,
 						delimleftlen = delimleft.length,
 						delimright = delim.right,
@@ -97,7 +132,7 @@
 					// Iterate over the string.
 					while (next()) {
 						if (c === '\n') {
-							if (str.charAt(i - 1) !== '\r') {
+							if (template.charAt(i - 1) !== '\r') {
 								line += 1;
 							}
 						} else if (c === '\r') {
@@ -134,7 +169,7 @@
 							case '.':
 								modifier = value = c;
 								break;
-							// Variable.
+							// Interpolation.
 							default:
 								value += c;
 							}
@@ -142,7 +177,7 @@
 							// Read the value of the token.
 							while (next()) {
 								// Handle 'tripple mustache' specifically (i.e. read the first '}' and do nothing).
-								if (!(modifier === '{' && delimright === '}}' && lookahead(delimrightlen + 1) === '}}}')) {
+								if (!(modifier === '{' && delimright === '}}' && lookahead(3) === '}}}')) {
 									// Found right delimiter (i.e. '}}').
 									if (lookahead(delimrightlen) === delimright) {
 										next(delimrightlen);
@@ -174,24 +209,43 @@
 							}
 
 							// Create and return the token.
-							return {
+							token = {
 								type: tokenType,
 								value: util.trim(value),
-								text: str.substring(start, +i),
+								text: template.substring(start, +i),
 								start: pointer(start),
 								end: pointer(+i),
 								line: line
 							};
+							break;
+						// No delimiter found so we read characters
+						// until we find a delimiter and return a text token.
+						} else {
+							start = +i;
+
+							while (c && lookahead(delimleftlen) !== delimleft) {
+								next();
+							}
+
+							token = {
+								type: 'text',
+								value: template.substring(start, i),
+								text: template.substring(start, i),
+								start: pointer(start),
+								end: pointer(+i),
+								line: line
+							};
+
+							break;
 						}
 					}
 
-					// No token found.
-					return null;
+					return token;
 				}
 			};
 		};
 
-	// The makeTokenizer() function also exposes the
+	// The makeTokenizer() function exposes the
 	// default mustache delimiter object.
 	makeTokenizer.defaultDelimiter = function () {
 		return {
