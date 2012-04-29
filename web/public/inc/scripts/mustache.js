@@ -1039,7 +1039,9 @@ var MUSTACHE = (function () {
 							i = 0,
 							len = 0,
 							str = '',
-							temp = null;
+							temp = null,
+							d,
+							extraPush = false;
 		
 						if (!util.isArray(data)) {
 							if (data) {
@@ -1052,19 +1054,45 @@ var MUSTACHE = (function () {
 						len = data.length;
 		
 						for (i = 0; i < len; i += 1) {
-							contextStack.push(data[i]);
+							d = data[i];
+							extraPush = false;
+							contextStack.push(d);
+		
+							// If the data has its own valueOf() implementation then
+							// we respect it and convert the data using its valueOf() method.
+							if (d && typeof d.valueOf === 'function' && d.valueOf !== nativeValueOf) {
+								extraPush = true;
+								d = d.valueOf();
+								contextStack.push(d);
+							}
+		
+							// If the data is a function then we call it and use its result
+							// as the data for the template.
+							if (typeof d === 'function') {
+								extraPush = true;
+								d = d();
+								contextStack.push(d);
+							}
+		
 							temp = internalInterpreter.interpret({
 								// Prefix and postfix the template artificially
 								// so that the first and last tokens do
 								// not get treated as standalone.
 								template: '=' + template + '=',
-								data: data[i],
+								data: d,
 								contextStack: contextStack,
 								partials: partials,
 								delim: delim
 							});
+		
 							str += temp.substring(1, temp.length - 1);
 							contextStack.pop();
+		
+							// If we used the data's valueOf() method or the data was a function
+							// then we have an extra object on the context stack so we need to pop it.
+							if (extraPush) {
+								contextStack.pop();
+							}
 						}
 		
 						return str;
