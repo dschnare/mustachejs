@@ -21,27 +21,25 @@
 					names = name.split('.'),
 					i = 0,
 					data,
-					ctx,
 					len = names.length,
 					ctxStack = contextStack;
 
 				for (i = 0; i < len - 1; i += 1) {
 					name = names[i];
-					ctx = ctxStack.getContext(name);
+					data = ctxStack.get(name);
 
 					// Resolution failed.
-					if (ctx === undefined) {
+					if (data === undefined) {
 						data = '';
-						break;
+						// Stop the loop.
+						i = len;
 					} else {
-						data = ctx[name];
-
 						// If the data has its own valueOf() implementation then
 						// we respect it and convert the data using its valueOf() method.
 						if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
 							data = data.valueOf();
 						} else if (typeof data === 'function') {
-							data = data.call(ctx);
+							data = data();
 						}
 
 						ctxStack = makeContextStack(data);
@@ -54,25 +52,18 @@
 				// MUST be rendered against the default delimiters, then interpolated in place
 				// of the lambda.
 				name = names[len - 1];
-				ctx = ctxStack.getContext(name);
+				data = ctxStack.get(name);
 
 				// Resolution failed.
-				if (ctx === undefined) {
+				if (data === undefined) {
 					data = '';
 				} else {
-					data = ctx[name];
-
 					// If the data has its own valueOf() implementation then
 					// we respect it and convert the data using its valueOf() method.
 					if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
 						data = data.valueOf();
 					} else if (typeof data === 'function') {
-						data = internalInterpreter.interpret({
-							template: data.call(ctx),
-							data: contextStack.context(),
-							contextStack: contextStack,
-							partials: partials
-						});
+						data = data();
 					}
 				}
 
@@ -88,7 +79,6 @@
 					names = name.split('.'),
 					i = 0,
 					data,
-					ctx,
 					len = names.length,
 					ctxStack = contextStack;
 
@@ -96,24 +86,23 @@
 
 				for (i = 0; i < len - 1; i += 1) {
 					name = names[i];
-					ctx = ctxStack.getContext(name);
+					data = ctxStack.get(name);
 
 					// Resolution failed.
-					if (ctx === undefined) {
+					if (data === undefined) {
 						data = '';
-						break;
+						// Stop the loop.
+						i = len;
 					} else {
-						data = ctx[name];
-
 						// If the data has its own valueOf() implementation then
 						// we respect it and convert the data using its valueOf() method.
 						if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
 							data = data.valueOf();
 						} else if (typeof data === 'function') {
-							if (data.length === 1) {
-								data = data.call(ctx, sectionText);
+							if (data.originalMethod.length === 1) {
+								data = data(sectionText);
 							} else {
-								data = data.call(ctx);
+								data = data();
 							}
 						}
 
@@ -127,26 +116,18 @@
 				// unprocessed section contents).  The returned value MUST be rendered against
 				// the current delimiters, then interpolated in place of the section.
 				name = names[len - 1];
-				ctx = ctxStack.getContext(name);
+				data = ctxStack.get(name);
 
 				// Resolution failed.
-				if (ctx === undefined) {
+				if (data === undefined) {
 					data = '';
 				} else {
-					data = ctx[name];
-
 					// If the data has its own valueOf() implementation then
 					// we respect it and convert the data using its valueOf() method.
 					if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
 						data = data.valueOf();
 					} else if (typeof data === 'function') {
-						data = internalInterpreter.interpret({
-							template: data.call(ctx, sectionText),
-							data: contextStack.context(),
-							contextStack: contextStack,
-							partials: partials,
-							delim: delim
-						});
+						data = data(sectionText);
 					}
 				}
 
@@ -160,7 +141,6 @@
 					names = name.split('.'),
 					i = 0,
 					data,
-					ctx,
 					len = names.length,
 					ctxStack = contextStack;
 
@@ -168,24 +148,23 @@
 
 				for (i = 0; i < len - 1; i += 1) {
 					name = names[i];
-					ctx = ctxStack.getContext(name);
+					data = ctxStack.get(name);
 
 					// Resolution failed.
-					if (ctx === undefined) {
+					if (data === undefined) {
 						data = '';
-						break;
+						// Stop the loop.
+						i = len;
 					} else {
-						data = ctx[name];
-
 						// If the data has its own valueOf() implementation then
 						// we respect it and convert the data using its valueOf() method.
 						if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
 							data = data.valueOf();
 						} else if (typeof data === 'function') {
-							if (data.length === 1) {
-								data = data.call(ctx, sectionText);
+							if (data.originalMethod.length === 1) {
+								data = data(sectionText);
 							} else {
-								data = data.call(ctx);
+								data = data();
 							}
 						}
 
@@ -199,14 +178,12 @@
 				// unprocessed section contents).  The returned value MUST be rendered against
 				// the current delimiters, then interpolated in place of the section.
 				name = names[len - 1];
-				ctx = ctxStack.getContext(name);
+				data = ctxStack.get(name);
 
 				// Resolution failed.
-				if (ctx === undefined) {
+				if (data === undefined) {
 					data = '';
 				} else {
-					data = ctx[name];
-
 					if (typeof data === 'function') {
 						data = true;
 					}
@@ -394,14 +371,12 @@
 					contextStack = args.contextStack,
 					partials = args.partials;
 
-				if (typeof data === 'function') {
-					data = internalInterpreter.interpret({
-						template: data(),
-						data: contextStack.context(),
-						contextStack: contextStack,
-						partials: partials
-					});
-				}
+				data = internalInterpreter.interpret({
+					template: typeof data === 'function' ? data() : data,
+					data: contextStack.context(),
+					contextStack: contextStack,
+					partials: partials
+				});
 
 				helpers.replaceToken(template, token, data);
 			},
@@ -428,6 +403,13 @@
 						partials: partials
 					});
 
+				temp = internalInterpreter.interpret({
+					template: temp,
+					data: contextStack.context(),
+					contextStack: contextStack,
+					partials: partials
+				});
+
 				if (temp) {
 					temp = util.htmlEscape(temp.toString());
 					helpers.replaceToken(template, token, temp);
@@ -446,6 +428,13 @@
 						contextStack: contextStack,
 						partials: partials
 					});
+
+				temp = internalInterpreter.interpret({
+					template: temp,
+					data: contextStack.context(),
+					contextStack: contextStack,
+					partials: partials
+				});
 
 				if (temp) {
 					temp += '';
@@ -509,6 +498,14 @@
 				});
 
 				if (typeof data === 'string') {
+					data = internalInterpreter.interpret({
+						template: data,
+						data: contextStack.context(),
+						contextStack: contextStack,
+						delim: delim,
+						partials: partials
+					});
+
 					template.replace({
 						begin: beginToken.start,
 						end: endToken.end,

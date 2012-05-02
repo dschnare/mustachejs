@@ -523,18 +523,39 @@ var MUSTACHE = (function () {
 			return function (o) {
 				var stack = [{}],
 					bind = function (fn, thisObj) {
-						return function () {
-							return fn.apply(thisObj, arguments);
-						};
+						var f = function () {
+								if (arguments.length) {
+									return fn.apply(thisObj, arguments);
+								}
+								return fn.call(thisObj);
+							};
+		
+						f.valueOf = fn.valueOf;
+						f.toString = fn.toString;
+						f.originalMethod = fn;
+						f.thisObj = thisObj;
+		
+						return f;
 					},
 					ctxStack = {
 						// Retrieves the current context (i.e. top of the stack).
 						context: function () {
 							return stack[stack.length - 1];
 						},
+						// A reference to the internal stack.
+						stack: function () {
+							return stack;
+						},
 						// Traverses the stack, starting from the top, looking
 						// for an object with the specified key name. If no name exists
-						// in any context then returns undefined.
+						// in any context then returns undefined. If the key is a method
+						// then the function returned will be bound to the appropriate context
+						// and can be called with the same arguments as the original method.
+						// The function returned will also contain the property 'originalMethod'
+						// that will reference the underlying method and the property 'thisObj'
+						// that will reference the underlying context (i.e. this object). Also,
+						// the function returned will preserve the toString() and valueOf() methods
+						// of the original method being wrapped.
 						get: function (name) {
 							var i = stack.length, o, p, ret;
 		
@@ -555,22 +576,6 @@ var MUSTACHE = (function () {
 							}
 		
 							return ret;
-						},
-						// Traverses the stack, starting from the top, looking
-						// for an object with the specified name. If no name exists
-						// in any context then returns undefined. Otherwise
-						// returns the context that has name.
-						getContext: function (name) {
-							var i = stack.length, o;
-		
-							while (i) {
-								i -= 1;
-								o = stack[i];
-		
-								if (o[name] !== undefined) {
-									return o;
-								}
-							}
 						},
 						// Pushes a new object onty the stack.
 						// This object is now the current context.
@@ -726,7 +731,7 @@ var MUSTACHE = (function () {
 			var internalInterpreter,
 				nativeValueOf = ({}).valueOf,
 				resolvers = {
-					// {name, contextStack, partials}
+					// {name, contextStack, partials, [interpret]}
 					interpolation: function (args) {
 						var name = args.name,
 							contextStack = args.contextStack,
@@ -734,27 +739,25 @@ var MUSTACHE = (function () {
 							names = name.split('.'),
 							i = 0,
 							data,
-							ctx,
 							len = names.length,
 							ctxStack = contextStack;
 		
 						for (i = 0; i < len - 1; i += 1) {
 							name = names[i];
-							ctx = ctxStack.getContext(name);
+							data = ctxStack.get(name);
 		
 							// Resolution failed.
-							if (ctx === undefined) {
+							if (data === undefined) {
 								data = '';
-								break;
+								// Stop the loop.
+								i = len;
 							} else {
-								data = ctx[name];
-		
 								// If the data has its own valueOf() implementation then
 								// we respect it and convert the data using its valueOf() method.
 								if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
 									data = data.valueOf();
 								} else if (typeof data === 'function') {
-									data = data.call(ctx);
+									data = data();
 								}
 		
 								ctxStack = makeContextStack(data);
@@ -767,25 +770,18 @@ var MUSTACHE = (function () {
 						// MUST be rendered against the default delimiters, then interpolated in place
 						// of the lambda.
 						name = names[len - 1];
-						ctx = ctxStack.getContext(name);
+						data = ctxStack.get(name);
 		
 						// Resolution failed.
-						if (ctx === undefined) {
+						if (data === undefined) {
 							data = '';
 						} else {
-							data = ctx[name];
-		
 							// If the data has its own valueOf() implementation then
 							// we respect it and convert the data using its valueOf() method.
 							if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
 								data = data.valueOf();
 							} else if (typeof data === 'function') {
-								data = internalInterpreter.interpret({
-									template: data.call(ctx),
-									data: contextStack.context(),
-									contextStack: contextStack,
-									partials: partials
-								});
+								data = data();
 							}
 						}
 		
@@ -801,7 +797,6 @@ var MUSTACHE = (function () {
 							names = name.split('.'),
 							i = 0,
 							data,
-							ctx,
 							len = names.length,
 							ctxStack = contextStack;
 		
@@ -809,24 +804,23 @@ var MUSTACHE = (function () {
 		
 						for (i = 0; i < len - 1; i += 1) {
 							name = names[i];
-							ctx = ctxStack.getContext(name);
+							data = ctxStack.get(name);
 		
 							// Resolution failed.
-							if (ctx === undefined) {
+							if (data === undefined) {
 								data = '';
-								break;
+								// Stop the loop.
+								i = len;
 							} else {
-								data = ctx[name];
-		
 								// If the data has its own valueOf() implementation then
 								// we respect it and convert the data using its valueOf() method.
 								if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
 									data = data.valueOf();
 								} else if (typeof data === 'function') {
-									if (data.length === 1) {
-										data = data.call(ctx, sectionText);
+									if (data.originalMethod.length === 1) {
+										data = data(sectionText);
 									} else {
-										data = data.call(ctx);
+										data = data();
 									}
 								}
 		
@@ -840,26 +834,18 @@ var MUSTACHE = (function () {
 						// unprocessed section contents).  The returned value MUST be rendered against
 						// the current delimiters, then interpolated in place of the section.
 						name = names[len - 1];
-						ctx = ctxStack.getContext(name);
+						data = ctxStack.get(name);
 		
 						// Resolution failed.
-						if (ctx === undefined) {
+						if (data === undefined) {
 							data = '';
 						} else {
-							data = ctx[name];
-		
 							// If the data has its own valueOf() implementation then
 							// we respect it and convert the data using its valueOf() method.
 							if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
 								data = data.valueOf();
 							} else if (typeof data === 'function') {
-								data = internalInterpreter.interpret({
-									template: data.call(ctx, sectionText),
-									data: contextStack.context(),
-									contextStack: contextStack,
-									partials: partials,
-									delim: delim
-								});
+								data = data(sectionText);
 							}
 						}
 		
@@ -873,7 +859,6 @@ var MUSTACHE = (function () {
 							names = name.split('.'),
 							i = 0,
 							data,
-							ctx,
 							len = names.length,
 							ctxStack = contextStack;
 		
@@ -881,24 +866,23 @@ var MUSTACHE = (function () {
 		
 						for (i = 0; i < len - 1; i += 1) {
 							name = names[i];
-							ctx = ctxStack.getContext(name);
+							data = ctxStack.get(name);
 		
 							// Resolution failed.
-							if (ctx === undefined) {
+							if (data === undefined) {
 								data = '';
-								break;
+								// Stop the loop.
+								i = len;
 							} else {
-								data = ctx[name];
-		
 								// If the data has its own valueOf() implementation then
 								// we respect it and convert the data using its valueOf() method.
 								if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
 									data = data.valueOf();
 								} else if (typeof data === 'function') {
-									if (data.length === 1) {
-										data = data.call(ctx, sectionText);
+									if (data.originalMethod.length === 1) {
+										data = data(sectionText);
 									} else {
-										data = data.call(ctx);
+										data = data();
 									}
 								}
 		
@@ -912,14 +896,12 @@ var MUSTACHE = (function () {
 						// unprocessed section contents).  The returned value MUST be rendered against
 						// the current delimiters, then interpolated in place of the section.
 						name = names[len - 1];
-						ctx = ctxStack.getContext(name);
+						data = ctxStack.get(name);
 		
 						// Resolution failed.
-						if (ctx === undefined) {
+						if (data === undefined) {
 							data = '';
 						} else {
-							data = ctx[name];
-		
 							if (typeof data === 'function') {
 								data = true;
 							}
@@ -1107,14 +1089,12 @@ var MUSTACHE = (function () {
 							contextStack = args.contextStack,
 							partials = args.partials;
 		
-						if (typeof data === 'function') {
-							data = internalInterpreter.interpret({
-								template: data(),
-								data: contextStack.context(),
-								contextStack: contextStack,
-								partials: partials
-							});
-						}
+						data = internalInterpreter.interpret({
+							template: typeof data === 'function' ? data() : data,
+							data: contextStack.context(),
+							contextStack: contextStack,
+							partials: partials
+						});
 		
 						helpers.replaceToken(template, token, data);
 					},
@@ -1141,6 +1121,13 @@ var MUSTACHE = (function () {
 								partials: partials
 							});
 		
+						temp = internalInterpreter.interpret({
+							template: temp,
+							data: contextStack.context(),
+							contextStack: contextStack,
+							partials: partials
+						});
+		
 						if (temp) {
 							temp = util.htmlEscape(temp.toString());
 							helpers.replaceToken(template, token, temp);
@@ -1159,6 +1146,13 @@ var MUSTACHE = (function () {
 								contextStack: contextStack,
 								partials: partials
 							});
+		
+						temp = internalInterpreter.interpret({
+							template: temp,
+							data: contextStack.context(),
+							contextStack: contextStack,
+							partials: partials
+						});
 		
 						if (temp) {
 							temp += '';
@@ -1222,6 +1216,14 @@ var MUSTACHE = (function () {
 						});
 		
 						if (typeof data === 'string') {
+							data = internalInterpreter.interpret({
+								template: data,
+								data: contextStack.context(),
+								contextStack: contextStack,
+								delim: delim,
+								partials: partials
+							});
+		
 							template.replace({
 								begin: beginToken.start,
 								end: endToken.end,
