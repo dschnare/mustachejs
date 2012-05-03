@@ -76,11 +76,21 @@
 					contextStack = args.contextStack,
 					delim = args.delim,
 					partials = args.partials,
+					ctx = contextStack.context(),
 					names = name.split('.'),
 					i = 0,
 					data,
 					len = names.length,
-					ctxStack = contextStack;
+					ctxStack = contextStack,
+					render = function (template, newData) {
+						return internalInterpreter.interpret({
+							template: template,
+							data: newData || ctx,
+							delim: delim,
+							partials: partials,
+							contextStack: contextStack
+						});
+					};
 
 				sectionText = sectionText.toString();
 
@@ -99,8 +109,8 @@
 						if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
 							data = data.valueOf();
 						} else if (typeof data === 'function') {
-							if (data.originalMethod.length === 1) {
-								data = data(sectionText);
+							if (data.originalMethod.length >= 1) {
+								data = data(sectionText, render);
 							} else {
 								data = data();
 							}
@@ -127,7 +137,7 @@
 					if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
 						data = data.valueOf();
 					} else if (typeof data === 'function') {
-						data = data(sectionText);
+						data = data(sectionText, render);
 					}
 				}
 
@@ -138,11 +148,23 @@
 				var name = args.name,
 					sectionText = args.sectionText,
 					contextStack = args.contextStack,
+					delim = args.delim,
+					partials = args.partials,
+					ctx = contextStack.context(),
 					names = name.split('.'),
 					i = 0,
 					data,
 					len = names.length,
-					ctxStack = contextStack;
+					ctxStack = contextStack,
+					render = function (template, newData) {
+						return internalInterpreter.interpret({
+							template: template,
+							data: newData || ctx,
+							delim: delim,
+							partials: partials,
+							contextStack: contextStack
+						});
+					};
 
 				sectionText = sectionText.toString();
 
@@ -161,8 +183,8 @@
 						if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
 							data = data.valueOf();
 						} else if (typeof data === 'function') {
-							if (data.originalMethod.length === 1) {
-								data = data(sectionText);
+							if (data.originalMethod.length >= 1) {
+								data = data(sectionText, render);
 							} else {
 								data = data();
 							}
@@ -548,6 +570,8 @@
 				data = resolvers.inverseSection({
 					name: beginToken.value,
 					sectionText: innerText,
+					delim: delim,
+					partials: partials,
 					contextStack: contextStack
 				});
 

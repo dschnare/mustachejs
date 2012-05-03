@@ -115,6 +115,69 @@ If any object encountered by mustachejs has a custom `valueOf` implementation th
 		// Writes: {{message}}, age:{{age}} | Hello World!, age:29
 		console.log(template, '|', M.render(template, model));
 
+# Recursive Rendering
+
+Unlike standard mustache engines, mustachejs attempts to recursively render any data value from properties or lambdas. The reason for this deviation is because the specification does not state any rules for recursive rendering other than that it must occur for lambdas. By assuming that at any time a new template could potentially be returned, mustachejs recursively renders all results, making it extremely easy to create dynamic templates.
+
+# Section Rendering
+
+To make rendering sections more customizable mustachejs provides a render function argument to lambdas or functions in the member selection chain of a section. This render function accepts a template and an optional model/data argument that will override the current data context. For example:
+
+	var data = {cards: ['kh', 'ks', 'kc', 'kd', 'as'], player: {name: 'Alex', score: 2034}};
+
+	{{player.name}}: {{player.score}}
+	Hand: {{#cards}}{{.}}{{/cards}}
+
+We can easily modify how cards are rendered by doing the following:
+
+	data.displayCard = function (template, render) {
+		var face = '',
+			suit = '';
+
+		// Renders: {{.}} as a value like 'ks'
+		// We don't specify a data context of our own
+		// because we want the card to be rendered as is.
+		// We could have did something like this:
+		// template = render(template, {specific data});
+		// to override the current data context.
+		template = render(template);
+
+		switch (template.charAt(0)) {
+		case 'k':
+			face = 'King';
+			break;
+		case 'a':
+			face = 'Ace';
+			break;
+		}
+
+		switch (template.charAt(1)) {
+		case 's':
+			suit = 'Spades';
+			break;
+		case 'd':
+			suit = 'Diamonds';
+			break;
+		case 'h':
+			suit = 'Herats';
+			break;
+		case 'c':
+			suit = 'Clubs';
+			break;
+		}
+
+		return face + ' of ' + suit;
+	};
+
+	{{player.name}}: {{player.score}}
+	Hand: {{#cards}}{{#displayCard}}{{.}} {{/displayCard}},{{/cards}}
+
+The `render` function has the following signature:
+
+	render function(template, data) {}
+
+Where `data` is an option data object used in place of the current data context.
+
 # API
 
 The mustachejs module exposes a simple API.

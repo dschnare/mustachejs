@@ -177,6 +177,7 @@ var MUSTACHE = (function () {
 							return +i;
 						},
 						// Retrieves all the tokens in the template starting from the begining of the template.
+						// Note that only a single delimiter will be used.
 						getTokens: function (delim) {
 							var savedPosition = i.value,
 								savedLine = line,
@@ -731,7 +732,7 @@ var MUSTACHE = (function () {
 			var internalInterpreter,
 				nativeValueOf = ({}).valueOf,
 				resolvers = {
-					// {name, contextStack, partials, [interpret]}
+					// {name, contextStack, partials}
 					interpolation: function (args) {
 						var name = args.name,
 							contextStack = args.contextStack,
@@ -794,11 +795,21 @@ var MUSTACHE = (function () {
 							contextStack = args.contextStack,
 							delim = args.delim,
 							partials = args.partials,
+							ctx = contextStack.context(),
 							names = name.split('.'),
 							i = 0,
 							data,
 							len = names.length,
-							ctxStack = contextStack;
+							ctxStack = contextStack,
+							render = function (template, newData) {
+								return internalInterpreter.interpret({
+									template: template,
+									data: newData || ctx,
+									delim: delim,
+									partials: partials,
+									contextStack: contextStack
+								});
+							};
 		
 						sectionText = sectionText.toString();
 		
@@ -817,8 +828,8 @@ var MUSTACHE = (function () {
 								if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
 									data = data.valueOf();
 								} else if (typeof data === 'function') {
-									if (data.originalMethod.length === 1) {
-										data = data(sectionText);
+									if (data.originalMethod.length >= 1) {
+										data = data(sectionText, render);
 									} else {
 										data = data();
 									}
@@ -845,7 +856,7 @@ var MUSTACHE = (function () {
 							if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
 								data = data.valueOf();
 							} else if (typeof data === 'function') {
-								data = data(sectionText);
+								data = data(sectionText, render);
 							}
 						}
 		
@@ -856,11 +867,23 @@ var MUSTACHE = (function () {
 						var name = args.name,
 							sectionText = args.sectionText,
 							contextStack = args.contextStack,
+							delim = args.delim,
+							partials = args.partials,
+							ctx = contextStack.context(),
 							names = name.split('.'),
 							i = 0,
 							data,
 							len = names.length,
-							ctxStack = contextStack;
+							ctxStack = contextStack,
+							render = function (template, newData) {
+								return internalInterpreter.interpret({
+									template: template,
+									data: newData || ctx,
+									delim: delim,
+									partials: partials,
+									contextStack: contextStack
+								});
+							};
 		
 						sectionText = sectionText.toString();
 		
@@ -879,8 +902,8 @@ var MUSTACHE = (function () {
 								if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
 									data = data.valueOf();
 								} else if (typeof data === 'function') {
-									if (data.originalMethod.length === 1) {
-										data = data(sectionText);
+									if (data.originalMethod.length >= 1) {
+										data = data(sectionText, render);
 									} else {
 										data = data();
 									}
@@ -1266,6 +1289,8 @@ var MUSTACHE = (function () {
 						data = resolvers.inverseSection({
 							name: beginToken.value,
 							sectionText: innerText,
+							delim: delim,
+							partials: partials,
 							contextStack: contextStack
 						});
 		
