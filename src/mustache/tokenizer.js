@@ -76,6 +76,7 @@
 					return +i;
 				},
 				// Retrieves all the tokens in the template starting from the begining of the template.
+				// Note that only a single delimiter will be used.
 				getTokens: function (delim) {
 					var savedPosition = i.value,
 						savedLine = line,

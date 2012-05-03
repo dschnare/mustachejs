@@ -9,7 +9,7 @@
 		<script type="text/javascript" src="inc/scripts/mustache.js"></script>
 		<script type="text/javascript">
 			var M = MUSTACHE,
-				template = '{{message}}, age:{{age}} --- {{#currency}}45{{/currency}}',
+				template = '{{message}}, age:{{age}} --- {{#currency}}{{age}}{{/currency}}',
 				model = {
 					message: {
 						toString: function () {
@@ -20,7 +20,6 @@
 						return 29;
 					},
 					currency: function (body) {
-						console.log('body:', body);
 						return '$' + body;
 					}
 				};
