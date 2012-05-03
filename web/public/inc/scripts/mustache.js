@@ -531,8 +531,8 @@ var MUSTACHE = (function () {
 								return fn.call(thisObj);
 							};
 		
-						f.valueOf = fn.valueOf;
-						f.toString = fn.toString;
+						f.valueOf = fn.valueOf === f.valueOf ? f.valueOf : function () { return fn.valueOf(); };
+						f.toString = fn.toString === f.toString ? f.toString : function () { return fn.toString(); };
 						f.originalMethod = fn;
 						f.thisObj = thisObj;
 		

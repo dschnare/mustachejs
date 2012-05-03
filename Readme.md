@@ -170,7 +170,7 @@ We can easily modify how cards are rendered by doing the following:
 	};
 
 	{{player.name}}: {{player.score}}
-	Hand: {{#cards}}{{#displayCard}}{{.}} {{/displayCard}},{{/cards}}
+	Hand: {{#cards}}{{#displayCard}}{{.}}{{/displayCard}},{{/cards}}
 
 The `render` function has the following signature:
 
