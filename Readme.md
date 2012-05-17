@@ -6,43 +6,14 @@ This implementation has the following features:
 - Regular expressions are not used in order to mitigate overhead and improve performance.
 - The complete [mustache specification](https://github.com/mustache/spec) is implemented, including lambdas.
 - The source code is well commented and easy to learn from.
+- Can be loaded as an [AMD](https://github.com/amdjs/amdjs-api/wiki/AMD) or [NodeJS/CommonJS](http://wiki.commonjs.org/wiki/Modules/1.1) module.
 
 For help with the mustache syntax see the following [manpage](http://mustache.github.com/mustache.5.html).
 
 
-# Organization
-
-This project is organized into the following partitions/abstractions.
-
-- src
-
-	This directory contains all source code that implements mustachejs.
-
-- vendor
-
-	This directory contains all the required third party binaries and source code.
-
-	The following third party dependencies exist:
-
-		- AjaxMin.exe (used to minify the JavaScript source -- Requires Windows)
-		- jslint.js (used to test the JavaScript source)
-		- rhino.jar (used to execute jslint.js)
-
-- web
-
-	This directory is a web project used to test against the mustache specification.
-
-
 # Building
 
-Ruby Rake is used to build the mustachejs module. Use `rake -D` to list all the rake tasks.
-The `Rakefile` is commented quite well so you can read this file to understand how
-the mustachejs module is built and minified.
-
-The `src` directory contains the source code that implements mustachejs. The source code
-is broken out into individual files that can be easily digested. These smaller files can be
-thought of as mini-modules. The mustachejs module is constructed from the `_mustache.js` template
-file and including the appropriate mini-module.
+Ruby Rake is used to build the mustachejs module. Use `rake -D` to list all the rake tasks. For more indepth details on the build system for the project see my [project template](https://github.com/dschnare/project-template) repo, of which this project is based.
 
 
 # Testing
@@ -50,7 +21,7 @@ file and including the appropriate mini-module.
 Any web server can be used to serve up the testing project, but for convenience a Sinatra web app
 has been written to get testing quickly.
 
-To get started with the built-in Sinatra app run (requires [Bundler](http://gembundler.com/) and [Foreman](https://github.com/ddollar/foreman)):
+To get started with the built-in Sinatra app run (requires [Bundler](http://gembundler.com/) and [Foreman](https://github.com/ddollar/foreman)) from the 'web' directory:
 
 Mac/Linux/Unix:
 
@@ -60,7 +31,7 @@ Mac/Linux/Unix:
 Windows (does not require Foreman)
 
 	bundle install
-	bundle exec ruby -Cweb app.rb -p 5000
+	bundle exec ruby app.rb -p 5000
 
 Once the web server is running then simply point your browser to [http://localhost:5000](http://localhost:5000).
 To kill the web server press `Ctr+C`.
@@ -77,6 +48,26 @@ Browsers and environments will be added to this list as testing ensues.
 - [Nodejs](http://nodejs.org/docs/latest/api/modules.html)/[CommonJS Module](http://wiki.commonjs.org/wiki/Modules/1.1)
 - [AMD Module](https://github.com/dschnare/definejs)
 
+# Build Products
+
+This project contains several modules that get built into the 'build' directory.
+
+**src/xport** - The xport module that exports a function used to export symbols for the Closure Compiler (< 1Kb when compiled).
+
+- build/xport.js
+- build/xport.min.js
+
+**src/mustachejs** - The mustachejs module that exports the mustachejs API. Depends on the xport module.
+
+- build/mustache.js
+- build/mustache.min.js
+- build/mustache-complete.js (contains xport module)
+- build/mustache-complete.min.js (contains compiled xport module)
+
+**src/mustache-spec** - The mustachejs specification module that exports several unit test suites.
+
+- build/mustache-spec.js
+- build/mustache-spec.min.js
 
 # Syntax
 
@@ -90,30 +81,30 @@ Unescaped interpolations can not only be referenced as usual; `{{&property}}`, b
 If any object encountered by mustachejs has a custom `valueOf` implementation then it will be used to convert the object into a value.
 
 	var M = MUSTACHE,
-			template = '{{message}}, age:{{age}}',
-			model = {
-				message: {
-					toString: function () {
-						return 'Hello World!';
-					}
-				},
-				age: function () {
-					return 29;
+		template = '{{message}}, age:{{age}}',
+		model = {
+			message: {
+				toString: function () {
+					return 'Hello World!';
 				}
-			};
-
-		model.age.valueOf = function () {
-			return 30;
+			},
+			age: function () {
+				return 29;
+			}
 		};
 
-		// Writes: {{message}}, age:{{age}} | Hello World!, age:30
-		console.log(template, '|', M.render(template, model));
+	model.age.valueOf = function () {
+		return 30;
+	};
 
-		// Removing the custom valueOf() method on our age() method
-		// will result in age() being invoked normally.
-		delete model.age.valueOf;
-		// Writes: {{message}}, age:{{age}} | Hello World!, age:29
-		console.log(template, '|', M.render(template, model));
+	// Writes: {{message}}, age:{{age}} | Hello World!, age:30
+	console.log(template, '|', M.render(template, model));
+
+	// Removing the custom valueOf() method on our age() method
+	// will result in age() being invoked normally.
+	delete model.age.valueOf;
+	// Writes: {{message}}, age:{{age}} | Hello World!, age:29
+	console.log(template, '|', M.render(template, model));
 
 # Recursive Rendering
 
