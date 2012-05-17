@@ -1,0 +1,10 @@
+=files=
+{manifest_path}/module.js
+
+=compiler options=
+--compilation_level ADVANCED_OPTIMIZATIONS
+--externs {manifest_path}/data.externs.js
+--externs {manifest_path}/jquery.externs.js
+--externs {manifest_path}/qunit.externs.js
+--externs src/xport/externs.js
+--externs src/mustache/externs.js

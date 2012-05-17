@@ -1,12 +1,6 @@
-(function (makeTokenizer) {
-	'use strict';
-
-	/*global 'makeTokenizer'*/
-
-	// This represents a mustache parser that is responsible
-	// for simplifying walking the tokens in a mustache template.
-
-	var makeParser = function (template) {
+		// This represents a mustache parser that is responsible
+		// for simplifying walking the tokens in a mustache template.
+		makeParser = function (template) {
 			var tokenizer = makeTokenizer(template),
 				// Variable to keep track of what section is currently
 				// open and permits the closing of sections.
@@ -109,7 +103,4 @@
 					return token;
 				}
 			};
-		};
-
-	return makeParser;
-}(makeTokenizer));
+		},
