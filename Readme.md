@@ -182,9 +182,12 @@ The mustachejs module exposes a simple API.
 
 	This method will throw an error if any syntax errors are encountered.
 
-	@template (string) The mustache template to render.
-	@data (object) [optional] The data to provide the template (i.e. context).
-	@paritals (object) [optional] An object that is searched for partial tempaltes by key.
+	@param template (string) The mustache template to render.
+	@param data (object) [optional] The data to provide the template (i.e. context).
+	@param paritals (object) [optional] An object that is searched for partial tempaltes by key.
+	@param delimiters (object) [optoinal] An object that descibes the default delimiters.
 	@return (string) The rendered template.
 
-	MUSTACHE.render(template, data, partials)
+	Delimiters is an object of the form: {left: '{{', right: '}}'}
+
+	MUSTACHE.render(template, data, partials, delimiters)

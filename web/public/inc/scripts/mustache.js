@@ -1302,11 +1302,12 @@
 				makeInterpreter = function () {
 					return {
 						// Interprets a mustache template and returns the result as a string.
-						interpret: function (template, data, partials) {
+						interpret: function (template, data, partials, delimiters) {
 							return internalInterpreter.interpret({
 								template: template,
 								data: data,
-								partials: partials
+								partials: partials,
+								delim: delimiters
 							});
 						}
 					};
@@ -1394,9 +1395,9 @@
 			return makeInterpreter;
 		}()),
 		MUSTACHE = {
-			"render": function (template, data, partials) {
+			"render": function (template, data, partials, delimiters) {
 				var interpreter = makeInterpreter();
-				return interpreter.interpret(template, data, partials);
+				return interpreter.interpret(template, data, partials, delimiters);
 			}
 		};
 

@@ -1,7 +1,7 @@
 		MUSTACHE = {
-			"render": function (template, data, partials) {
+			"render": function (template, data, partials, delimiters) {
 				var interpreter = makeInterpreter();
-				return interpreter.interpret(template, data, partials);
+				return interpreter.interpret(template, data, partials, delimiters);
 			}
 		};
 
