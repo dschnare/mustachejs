@@ -1174,6 +1174,7 @@
 							partialText = partials[token.value];
 
 						if (partialText) {
+							partialText = partialText.toString();
 							// If there is whitespace leading the token then
 							// we use this leading as the indentation for the
 							// partial template. It's key to indent the partial
