@@ -191,3 +191,43 @@ The mustachejs module exposes a simple API.
 	Delimiters is an object of the form: {left: '{{', right: '}}'}
 
 	MUSTACHE.render(template, data, partials, delimiters)
+
+
+
+
+	Attempts to retrieve an array of all properties being referenced in a mustachio template.
+	The properties will be returned as objects with the following properties:
+
+	- get() - Retrieves the value of the property referenced.
+	- set(value) - Attempts to set the property being referenced. If the value of the property is a function then the function will be called with the new value.
+	- context() - The context of the property. Useful if the property value is a function.
+
+	Example:
+
+		var template = '{{name}} {{children.first.name}}';
+		var data = {
+			name: 'Ninja',
+			children: {
+				first: {
+					name: 'Gaiden'
+				},
+			}
+		};
+		var accessors = MUSTACHE.inspect(template, data);
+
+		accessors[0].get(); // 'Ninja'
+		accessors[0].set('Mario'); // Sets data.name to 'Mario'
+		accessors[0].context(); // Retrieves data
+		accessors[1].get(); // 'Gaiden'
+		accessors[1].set('Baby Mario'); // Sets data.children.first.name to 'Baby Mario'
+		accessors[1].context(); // Retrieves data.children.first
+
+	@param template (string) The mustache template to render.
+	@param data (object) [optional] The data to provide the template (i.e. context).
+	@param paritals (object) [optional] An object that is searched for partial tempaltes by key.
+	@param delimiters (object) [optoinal] An object that descibes the default delimiters.
+	@return (Array) Accessor object for each referenced property.
+
+	Delimiters is an object of the form: {left: '{{', right: '}}'}
+
+	MUSTACHE.inspect(template, data, partials, delimiters)

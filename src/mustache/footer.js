@@ -1,4 +1,5 @@
 		MUSTACHE = {
+			"inspect": inspect,
 			"render": function (template, data, partials, delimiters) {
 				var interpreter = makeInterpreter();
 				return interpreter.interpret(template, data, partials, delimiters);

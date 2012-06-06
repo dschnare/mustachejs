@@ -64,7 +64,7 @@
 
 						return data;
 					},
-					// {name, sectionText, contextStack}
+					// {name, sectionText, contextStack, delim, partials}
 					section: function (args) {
 						var name = args.name,
 							sectionText = args.sectionText,
@@ -610,6 +610,8 @@
 						}
 					};
 				};
+
+			makeInterpreter.resolvers = resolvers;
 
 			internalInterpreter = {
 				// template - the template string

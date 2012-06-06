@@ -6,6 +6,7 @@
 {manifest_path}/contextstack.js
 {manifest_path}/parser.js
 {manifest_path}/interpreter.js
+{manifest_path}/inspect.js
 {manifest_path}/footer.js
 
 =compiler options=
