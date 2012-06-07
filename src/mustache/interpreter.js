@@ -64,7 +64,9 @@
 
 						return data;
 					},
-					// {name, sectionText, contextStack, delim, partials}
+					// {name, sectionText, contextStack, delim, partials, [result]}
+					// If result is an object then the property 'isLamba' will be set to
+					// true if the section refers to a lambda.
 					section: function (args) {
 						var name = args.name,
 							sectionText = args.sectionText,
@@ -132,6 +134,10 @@
 							if (data && typeof data.valueOf === 'function' && data.valueOf !== nativeValueOf) {
 								data = data.valueOf();
 							} else if (typeof data === 'function') {
+								if (args.result) {
+ 									args.result.isLambda = true;
+ 								}
+
 								data = data(sectionText, render);
 							}
 						}
@@ -501,7 +507,8 @@
 							delim = args.delim,
 							endToken = beginToken.endToken,
 							innerText = null,
-							data = null;
+							data = null,
+							resolveResult = {};
 
 						helpers.trimStandaloneToken(template, endToken);
 						helpers.trimStandaloneToken(template, beginToken);
@@ -512,10 +519,11 @@
 							sectionText: innerText,
 							contextStack: contextStack,
 							delim: delim,
-							partials: partials
+							partials: partials,
+							result: resolveResult
 						});
 
-						if (typeof data === 'string') {
+						if (resolveResult.isLambda && typeof data === 'string') {
 							data = internalInterpreter.interpret({
 								template: data,
 								data: contextStack.context(),
