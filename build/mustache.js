@@ -837,8 +837,8 @@
 								data = data.valueOf();
 							} else if (typeof data === 'function') {
 								if (args.result) {
- 									args.result.isLambda = true;
- 								}
+									args.result.isLambda = true;
+								}
 
 								data = data(sectionText, render);
 							}
