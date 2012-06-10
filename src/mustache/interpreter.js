@@ -213,6 +213,40 @@
 						}
 
 						return data;
+					},
+					// {name, partials}
+					partial: function (args) {
+						var name = args.name,
+							partials = args.partials,
+							names = name.split('.'),
+							len = names.length,
+							i = 0,
+							o = partials,
+							partial;
+
+						for (i = 0; i < len; i += 1) {
+							name = names[i];
+							partial = o[name];
+
+							// Resolution failed.
+							if (partial === undefined) {
+								partial = '';
+								// Stop the loop.
+								i = len;
+							} else {
+								// If the partial has its own valueOf() implementation then
+								// we respect it and convert the partial using its valueOf() method.
+								if (partial && typeof partial.valueOf === 'function' && partial.valueOf !== nativeValueOf) {
+									partial = partial.valueOf();
+								} else if (typeof partial === 'function') {
+									partial = partial();
+								}
+
+								o = partial;
+							}
+						}
+
+						return partial;
 					}
 				},
 				helpers = {
@@ -475,21 +509,24 @@
 							partials = args.partials,
 							temp = '',
 							leading = helpers.trimStandaloneToken(template, token),
-							partialText = partials[token.value];
+							partial = resolvers.partial({
+								name: token.value,
+								partials: partials
+							});
 
-						if (partialText) {
-							partialText = partialText.toString();
+						if (partial) {
+							partial = partial.toString();
 							// If there is whitespace leading the token then
 							// we use this leading as the indentation for the
 							// partial template. It's key to indent the partial
 							// template BEFORE it is parsed.
 							if (leading) {
-								partialText = util.indent(partialText, leading);
+								partial = util.indent(partial, leading);
 							}
 
 							// Now parse the partial template.
 							temp = internalInterpreter.interpret({
-								template: partialText,
+								template: partial,
 								data: data,
 								contextStack: contextStack,
 								partials: partials

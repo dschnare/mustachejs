@@ -26,6 +26,40 @@
 						}
 					};
 				},
+				makePartialAccessor = function (token) {
+					var pieces = token.value.split('.'),
+						name = pieces.pop(),
+						o = partials;
+
+					if (pieces.length) {
+						o = makeInterpreter.resolvers.partial({
+							name: pieces.join('.'),
+							partials: partials
+						});
+					}
+
+					return {
+						context: function () {
+							return o;
+						},
+						get: function () {
+							var ret = o[name];
+
+							if (ret && ret.valueOf !== nativeValueOf && typeof ret.valueOf === 'function') {
+								ret = ret.valueOf();
+							}
+
+							return ret;
+						},
+						set: function (value) {
+							if (typeof o[name] === 'function') {
+								o[name](value);
+							} else {
+								o[name] = value;
+							}
+						}
+					};
+				},
 				makeInterpolationAccessor = function (token) {
 					var pieces = token.value.split('.'),
 						name = pieces.pop(),
@@ -120,6 +154,9 @@
 				switch (token.type) {
 				case 'implicit':
 					accessors.push(makeImplicitAccessor());
+					break;
+				case 'partial':
+					accessors.push(makePartialAccessor(token));
 					break;
 				case 'interpolation':
 				case 'unescape-interpolation':
