@@ -9,23 +9,23 @@
 					var value = contextStack.context();
 
 					return {
-						name: function () {
+						"name": function () {
 							return '.';
 						},
-						context: function () {
+						"context": function () {
 							return value;
 						},
-						get: function () {
+						"get": function () {
 							if (value && value.valueOf !== nativeValueOf && typeof value.valueOf === 'function') {
 								return value.valueOf();
 							}
 
 							return value;
 						},
-						rawget: function () {
+						"rawget": function () {
 							return value;
 						},
-						set: function (v) {
+						"set": function (v) {
 							if (typeof value === 'function') {
 								value(v);
 							}
@@ -45,17 +45,17 @@
 					}
 
 					return {
-						name: function () {
+						"name": function () {
 							if (pieces.length) {
 								return pieces.join('.') + '.' + name;
 							}
 
 							return name;
 						},
-						context: function () {
+						"context": function () {
 							return o;
 						},
-						get: function () {
+						"get": function () {
 							var ret = o[name];
 
 							if (ret && ret.valueOf !== nativeValueOf && typeof ret.valueOf === 'function') {
@@ -64,12 +64,12 @@
 
 							return ret;
 						},
-						rawget: function () {
+						"rawget": function () {
 							if (o) {
 								return o[name];
 							}
 						},
-						set: function (value) {
+						"set": function (value) {
 							if (typeof o[name] === 'function') {
 								o[name](value);
 							} else {
@@ -92,17 +92,17 @@
 					}
 
 					return {
-						name: function () {
+						"name": function () {
 							if (pieces.length) {
 								return pieces.join('.') + '.' + name;
 							}
 
 							return name;
 						},
-						context: function () {
+						"context": function () {
 							return o;
 						},
-						get: function () {
+						"get": function () {
 							var ret;
 
 							if (o) {
@@ -115,12 +115,12 @@
 
 							return ret;
 						},
-						rawget: function () {
+						"rawget": function () {
 							if (o) {
 								return o[name];
 							}
 						},
-						set: function (value) {
+						"set": function (value) {
 							if (o) {
 								if (typeof o[name] === 'function') {
 									o[name](value);
@@ -151,17 +151,17 @@
 					}
 
 					return {
-						name: function () {
+						"name": function () {
 							if (pieces.length) {
 								return pieces.join('.') + '.' + name;
 							}
 
 							return name;
 						},
-						context: function () {
+						"context": function () {
 							return o;
 						},
-						get: function () {
+						"get": function () {
 							var ret;
 
 							if (o) {
@@ -174,12 +174,12 @@
 
 							return ret;
 						},
-						rawget: function () {
+						"rawget": function () {
 							if (o) {
 								return o[name];
 							}
 						},
-						set: function (value) {
+						"set": function (value) {
 							if (o) {
 								if (typeof value === 'function') {
 									o[name](value);
