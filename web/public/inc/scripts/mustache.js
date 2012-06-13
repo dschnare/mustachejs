@@ -1452,6 +1452,9 @@
 					var value = contextStack.context();
 
 					return {
+						name: function () {
+							return '.';
+						},
 						context: function () {
 							return value;
 						},
@@ -1460,6 +1463,9 @@
 								return value.valueOf();
 							}
 
+							return value;
+						},
+						rawget: function () {
 							return value;
 						},
 						set: function (v) {
@@ -1482,6 +1488,13 @@
 					}
 
 					return {
+						name: function () {
+							if (pieces.length) {
+								return pieces.join('.') + '.' + name;
+							}
+
+							return name;
+						},
 						context: function () {
 							return o;
 						},
@@ -1493,6 +1506,11 @@
 							}
 
 							return ret;
+						},
+						rawget: function () {
+							if (o) {
+								return o[name];
+							}
 						},
 						set: function (value) {
 							if (typeof o[name] === 'function') {
@@ -1517,6 +1535,13 @@
 					}
 
 					return {
+						name: function () {
+							if (pieces.length) {
+								return pieces.join('.') + '.' + name;
+							}
+
+							return name;
+						},
 						context: function () {
 							return o;
 						},
@@ -1532,6 +1557,11 @@
 							}
 
 							return ret;
+						},
+						rawget: function () {
+							if (o) {
+								return o[name];
+							}
 						},
 						set: function (value) {
 							if (o) {
@@ -1564,6 +1594,13 @@
 					}
 
 					return {
+						name: function () {
+							if (pieces.length) {
+								return pieces.join('.') + '.' + name;
+							}
+
+							return name;
+						},
 						context: function () {
 							return o;
 						},
@@ -1579,6 +1616,11 @@
 							}
 
 							return ret;
+						},
+						rawget: function () {
+							if (o) {
+								return o[name];
+							}
 						},
 						set: function (value) {
 							if (o) {

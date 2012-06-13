@@ -198,7 +198,9 @@ The mustachejs module exposes a simple API.
 	Attempts to retrieve an array of all properties being referenced in a mustachio template.
 	The properties will be returned as objects with the following properties:
 
-	- get() - Retrieves the value of the property referenced.
+	- name() - The name that appears in the mustache token.
+	- get() - Retrieves the value of the property referenced. If the property value has a custom valueOf() method then the result of this method will be returned.
+	- rawget() - Retrives the raw value of the property without calling the custom valueOf() method (if it exists).
 	- set(value) - Attempts to set the property being referenced. If the value of the property is a function then the function will be called with the new value.
 	- context() - The context of the property. Useful if the property value is a function.
 
@@ -215,9 +217,12 @@ The mustachejs module exposes a simple API.
 		};
 		var accessors = MUSTACHE.inspect(template, data);
 
+		accessors[0].name(); // 'name'
 		accessors[0].get(); // 'Ninja'
 		accessors[0].set('Mario'); // Sets data.name to 'Mario'
 		accessors[0].context(); // Retrieves data
+
+		accessors[1].name(); // children.first.name
 		accessors[1].get(); // 'Gaiden'
 		accessors[1].set('Baby Mario'); // Sets data.children.first.name to 'Baby Mario'
 		accessors[1].context(); // Retrieves data.children.first
