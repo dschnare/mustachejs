@@ -426,14 +426,19 @@
 							token = args.token,
 							data = args.data,
 							contextStack = args.contextStack,
-							partials = args.partials;
+							partials = args.partials,
+							disableRecursion = args.disableRecursion;
 
-						data = internalInterpreter.interpret({
-							template: typeof data === 'function' ? data() : data,
-							data: contextStack.context(),
-							contextStack: contextStack,
-							partials: partials
-						});
+						if (!disableRecursion) {
+							data = internalInterpreter.interpret({
+								template: typeof data === 'function' ? data() : data,
+								data: contextStack.context(),
+								contextStack: contextStack,
+								partials: partials
+							});
+						} else if (typeof data === 'function') {
+							data = data();
+						}
 
 						helpers.replaceToken(template, token, data);
 					},
@@ -454,18 +459,21 @@
 							token = args.token,
 							contextStack = args.contextStack,
 							partials = args.partials,
+							disableRecursion = args.disableRecursion,
 							temp = resolvers.interpolation({
 								name: token.value,
 								contextStack: contextStack,
 								partials: partials
 							});
 
-						temp = internalInterpreter.interpret({
-							template: temp,
-							data: contextStack.context(),
-							contextStack: contextStack,
-							partials: partials
-						});
+						if (!disableRecursion) {
+							temp = internalInterpreter.interpret({
+								template: temp,
+								data: contextStack.context(),
+								contextStack: contextStack,
+								partials: partials
+							});
+						}
 
 						if (temp) {
 							temp = util.htmlEscape(temp.toString());
@@ -480,18 +488,21 @@
 							token = args.token,
 							contextStack = args.contextStack,
 							partials = args.partials,
+							disableRecursion = args.disableRecursion,
 							temp = resolvers.interpolation({
 								name: token.value,
 								contextStack: contextStack,
 								partials: partials
 							});
 
-						temp = internalInterpreter.interpret({
-							template: temp,
-							data: contextStack.context(),
-							contextStack: contextStack,
-							partials: partials
-						});
+						if (!disableRecursion) {
+							temp = internalInterpreter.interpret({
+								template: temp,
+								data: contextStack.context(),
+								contextStack: contextStack,
+								partials: partials
+							});
+						}
 
 						if (temp) {
 							temp += '';
@@ -645,12 +656,13 @@
 				makeInterpreter = function () {
 					return {
 						// Interprets a mustache template and returns the result as a string.
-						interpret: function (template, data, partials, delimiters) {
+						interpret: function (template, data, partials, delimiters, disableRecursion) {
 							return internalInterpreter.interpret({
 								template: template,
 								data: data,
 								partials: partials,
-								delim: delimiters
+								delim: delimiters,
+								disableRecursion: disableRecursion
 							});
 						}
 					};
@@ -671,13 +683,15 @@
 						parser = makeParser(template),
 						delim = args.delim || makeTokenizer.defaultDelimiter(),
 						contextStack = args.contextStack || makeContextStack(),
+						disableRecursion = args.disableRecursion,
 						token = null,
 						state = {
 							template: template,
 							data: data,
 							contextStack: contextStack,
 							partials: partials,
-							delim: delim
+							delim: delim,
+							disableRecursion: disableRecursion
 						};
 
 					// Push our data onto our context stack.

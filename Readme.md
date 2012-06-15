@@ -108,7 +108,41 @@ If any object encountered by mustachejs has a custom `valueOf` implementation th
 
 # Recursive Rendering
 
-Unlike standard mustache engines, mustachejs attempts to recursively render any data value from properties or lambdas. The reason for this deviation is because the specification does not state any rules for recursive rendering other than that it must occur for lambdas. By assuming that at any time a new template could potentially be returned, mustachejs recursively renders all results, making it extremely easy to create dynamic templates.
+Unlike standard mustache engines, mustachejs attempts to recursively render any data value from properties or lambdas. The reason for this deviation is because the specification does not state any rules for recursive rendering other than that it must occur for lambdas. By assuming that at any time a new template could potentially be returned from an interpolation, mustachejs recursively renders all results, making it extremely easy to create dynamic templates.
+
+Recursive rendering can be thought of as treating interpolation as if it were always a lambda. The following example illustrates the difference.
+
+	var template = "{{display}}",
+		data = {
+			display: function () {
+				return "{{message}}";
+			},
+			message: "Hello World!"
+		};
+
+	MUSTACHE.render(template, data); // Returns "Hello World!"
+
+	// This is the typical behaviour according to the mustache specification for lambdas.
+	// All lambda results must be recursively rendered, so the sub-template is correctly interpolated.
+
+
+
+	data.display = "{{message}}";
+	MUSTACHE.render(template, data); // Returns "Hello World!"
+
+	// In this example we overwrite display to be the literal string "{{message}}" instead of
+	// a lambda (i.e. function). Beacuase of recursive rendering, mustachejs will automatically
+	// render this sub-template correctly as if it were a lambda.
+
+
+
+	MUSTACHE.render(template, data, null, null, true); // Returns "{{message}}"
+
+	// In this example we pass 'null' for both the partials and delimiters arguments, but
+	// pass 'true' for the 'disableRecursion' argument. Because recursion is disabled
+	// the sub-template will not be rendered but returned as-is instead.
+
+
 
 # Section Rendering
 
@@ -186,11 +220,12 @@ The mustachejs module exposes a simple API.
 	@param data (object) [optional] The data to provide the template (i.e. context).
 	@param paritals (object) [optional] An object that is searched for partial tempaltes by key.
 	@param delimiters (object) [optoinal] An object that descibes the default delimiters.
+	@param disableRecursion (boolean) [optional] Determines if recursive rendering is disabled.
 	@return (string) The rendered template.
 
 	Delimiters is an object of the form: {left: '{{', right: '}}'}
 
-	MUSTACHE.render(template, data, partials, delimiters)
+	MUSTACHE.render(template, data, partials, delimiters, disableRecursion)
 
 
 

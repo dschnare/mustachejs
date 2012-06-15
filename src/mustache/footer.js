@@ -1,8 +1,8 @@
 		MUSTACHE = {
 			"inspect": inspect,
-			"render": function (template, data, partials, delimiters) {
+			"render": function (template, data, partials, delimiters, disableRecursion) {
 				var interpreter = makeInterpreter();
-				return interpreter.interpret(template, data, partials, delimiters);
+				return interpreter.interpret(template, data, partials, delimiters, disableRecursion);
 			}
 		};
 
