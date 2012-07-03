@@ -194,7 +194,7 @@ Where `data` is an optional data object used in place of the current data contex
 
 # API
 
-If not loaded using a module framework then this module exports `BINDER` in the global namespace.
+If not loaded using a module framework then this module exports `MUSTACHE` in the global namespace.
 
 **MUSTACHE.render()**
 
