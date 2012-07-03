@@ -1,6 +1,11 @@
 # Overview
 
 Mustachejs is an implementation of the mustache template specification for JavaScript.
+
+For help with the mustache syntax see the following [manpage](http://mustache.github.com/mustache.5.html).
+
+# Features
+
 This implementation has the following features:
 
 - Regular expressions are not used in order to mitigate overhead and improve performance.
@@ -8,33 +13,34 @@ This implementation has the following features:
 - The source code is well commented and easy to learn from.
 - Can be loaded as an [AMD](https://github.com/amdjs/amdjs-api/wiki/AMD) or [NodeJS/CommonJS](http://wiki.commonjs.org/wiki/Modules/1.1) module.
 
-For help with the mustache syntax see the following [manpage](http://mustache.github.com/mustache.5.html).
 
+# Installation
 
-# Building
+Install locally:
 
-Ruby Rake is used to build the mustachejs module. Use `rake -D` to list all the rake tasks. For more indepth details on the build system for the project see my [project template](https://github.com/dschnare/project-template) repo, of which this project is based.
+	npm install git://github.com/dschnare/mustachejs.git
 
+Or use as a dependency:
 
-# Testing
+	{
+		"dependencies": {
+			"mustachejs": "git://github.com/dschnare/mustachejs.git"
+		}
+	}
 
-Any web server can be used to serve up the testing project, but for convenience a Sinatra web app
-has been written to get testing quickly.
+If all you want is a minified version of this script and its dependencies so you can simply include it in your web page do the following:
 
-To get started with the built-in Sinatra app run (requires [Bundler](http://gembundler.com/) and [Foreman](https://github.com/ddollar/foreman)) from the 'web' directory:
+1. Install Node with NPM.
+2. Create an empty directory and run the following:
 
-Mac/Linux/Unix:
+		npm install git://github.com/dschnare/mustachejs.git
+		cd node_modules/mustachejs
+		npm install
+		npm run-script build-test
 
-	bundle install
-	foreman start
+3. Copy the source files you want from `node_modules/mustachejs/test/js`. The combined script files contain mustachejs and all its dependencies.
+4. Delete the directory you just created.
 
-Windows (does not require Foreman)
-
-	bundle install
-	bundle exec ruby app.rb -p 5000
-
-Once the web server is running then simply point your browser to [http://localhost:5000](http://localhost:5000).
-To kill the web server press `Ctr+C`.
 
 # Support
 
@@ -48,26 +54,6 @@ Browsers and environments will be added to this list as testing ensues.
 - [Nodejs](http://nodejs.org/docs/latest/api/modules.html)/[CommonJS Module](http://wiki.commonjs.org/wiki/Modules/1.1)
 - [AMD Module](https://github.com/dschnare/definejs)
 
-# Build Products
-
-This project contains several modules that get built into the 'build' directory.
-
-**src/xport** - The xport module that exports a function used to export symbols for the Closure Compiler (< 1Kb when compiled).
-
-- build/xport.js
-- build/xport.min.js
-
-**src/mustachejs** - The mustachejs module that exports the mustachejs API. Depends on the xport module.
-
-- build/mustache.js
-- build/mustache.min.js
-- build/mustache-complete.js (contains xport module)
-- build/mustache-complete.min.js (contains compiled xport module)
-
-**src/mustache-spec** - The mustachejs specification module that exports several unit test suites.
-
-- build/mustache-spec.js
-- build/mustache-spec.min.js
 
 # Syntax
 
@@ -75,6 +61,7 @@ The entire Mustache [specification](https://github.com/mustache/spec) and syntax
 
 Partials can not only be referenced as usual; `{{>partial-name}}`, but also like `{{@partial-name}}`.
 Unescaped interpolations can not only be referenced as usual; `{{&property}}`, but also like `{{~property}}`.
+
 
 # Custom valueOf() method
 
@@ -105,6 +92,7 @@ If any object encountered by mustachejs has a custom `valueOf` implementation th
 	delete model.age.valueOf;
 	// Writes: {{message}}, age:{{age}} | Hello World!, age:29
 	console.log(template, '|', M.render(template, model));
+
 
 # Recursive Rendering
 
@@ -201,37 +189,46 @@ The `render` function has the following signature:
 
 	render function(template, data) {}
 
-Where `data` is an option data object used in place of the current data context.
+Where `data` is an optional data object used in place of the current data context.
+
 
 # API
 
-The mustachejs module exposes a simple API.
+If not loaded using a module framework then this module exports `BINDER` in the global namespace.
 
-	MUSTACHE is the global object containing the mustachejs API.
-	Note that this global object is only created if mustachejs is not
-	required via an AMD or CommonJS module loader.
+**MUSTACHE.render()**
 
+	render(template, data, partials, delimiters, disableRecursion)
 
-	Attempts to render the specified mustache template.
-
-	This method will throw an error if any syntax errors are encountered.
-
-	@param template (string) The mustache template to render.
-	@param data (object) [optional] The data to provide the template (i.e. context).
-	@param paritals (object) [optional] An object that is searched for partial tempaltes by key.
-	@param delimiters (object) [optoinal] An object that descibes the default delimiters.
-	@param disableRecursion (boolean) [optional] Determines if recursive rendering is disabled.
-	@return (string) The rendered template.
+	template - The mustache template to render.
+	data - [optional] The data to provide the template (i.e. context).
+	partials - [optional] An object that is searched for partial tempaltes by key.
+	delimiters - [optoinal] An object that descibes the default delimiters.
+	disableRecursion - [optional] Determines if recursive rendering is disabled.
+	return - The rendered template.
 
 	Delimiters is an object of the form: {left: '{{', right: '}}'}
 
-	MUSTACHE.render(template, data, partials, delimiters, disableRecursion)
+Attempts to render the specified mustache template.
+
+This method will throw an error if any syntax errors are encountered.
 
 
+**MUSTACHE.inspect()**
+
+	inspect(template, data, partials, delimiters)
+
+	template - The mustache template to render.
+	data - [optional] The data to provide the template (i.e. context).
+	paritals - [optional] An object that is searched for partial tempaltes by key.
+	delimiters - [optoinal] An object that descibes the default delimiters.
+	return - An array of Accessor objects for each referenced property.
+
+	Delimiters is an object of the form: {left: '{{', right: '}}'}
 
 
 	Attempts to retrieve an array of all properties being referenced in a mustachio template.
-	The properties will be returned as objects with the following properties:
+	The referenced properties will be returned as Accessor objects with the following properties:
 
 	- name() - The name that appears in the mustache token.
 	- get() - Retrieves the value of the property referenced. If the property value has a custom valueOf() method then the result of this method will be returned.
@@ -261,13 +258,3 @@ The mustachejs module exposes a simple API.
 		accessors[1].get(); // 'Gaiden'
 		accessors[1].set('Baby Mario'); // Sets data.children.first.name to 'Baby Mario'
 		accessors[1].context(); // Retrieves data.children.first
-
-	@param template (string) The mustache template to render.
-	@param data (object) [optional] The data to provide the template (i.e. context).
-	@param paritals (object) [optional] An object that is searched for partial tempaltes by key.
-	@param delimiters (object) [optoinal] An object that descibes the default delimiters.
-	@return (Array) Accessor object for each referenced property.
-
-	Delimiters is an object of the form: {left: '{{', right: '}}'}
-
-	MUSTACHE.inspect(template, data, partials, delimiters)
