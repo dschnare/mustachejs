@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Mustachejs Demo Page</title>
+		<meta charset="utf-8">
+	</head>
+	<body>
+		<link rel="stylesheet" type="text/css" href="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.2.min.js" />
+		<script type="text/javascript" src="js/combined.min.js"></script>
+		<script type="text/javascript">
+			var M = MUSTACHE,
+				template = '{{message}}, age:{{age}} ---> {{#currency}}{{age}}{{/currency}}',
+				model = {
+					message: {
+						toString: function () {
+							return 'Hello World! -{{age}}-';
+						}
+					},
+					age: function () {
+						return 29;
+					},
+					currency: function (body, render) {
+						return '$' + render(body);
+					}
+				},
+				cardModel = {
+					cards: ['kh', 'ks', 'kc', 'kd', 'as'],
+					player: {name: 'Alex', score: 2034},
+					displayCard: function (template, render) {
+						var face = '',
+							suit = '';
+
+						template = render(template);
+
+						switch (template.charAt(0)) {
+						case 'k':
+							face = 'King';
+							break;
+						case 'a':
+							face = 'Ace';
+							break;
+						}
+
+						switch (template.charAt(1)) {
+						case 's':
+							suit = 'Spades';
+							break;
+						case 'd':
+							suit = 'Diamonds';
+							break;
+						case 'h':
+							suit = 'Herats';
+							break;
+						case 'c':
+							suit = 'Clubs';
+							break;
+						}
+
+						return face + ' of ' + suit;
+					}
+				};
+
+
+			model.age.valueOf = function () {
+				return 30;
+			}
+
+			console.log(M.render(template, model));
+
+			delete model.age.valueOf;
+			console.log(M.render(template, model));
+
+			console.log(M.render('{{player.name}}: {{player.score}}\nHand: {{#cards}}{{#displayCard}}{{.}}{{/displayCard}},{{/cards}}', cardModel));
+		</script>
+	</body>
+</html>

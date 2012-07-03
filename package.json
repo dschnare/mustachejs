@@ -1,0 +1,29 @@
+{
+	"name": "mustachejs",
+	"version": "2.4.3",
+	"description": "Mustachejs is an implementation of the mustache template specification for JavaScript.",
+	"keywords": ["javascript","mustache","template","lambda"],
+	"author": {
+		"name": "Darren Schnare",
+		"email": "schnare.d@gmail.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": "http://github.com/dschnare/mustachejs.git"
+	},
+	"main": "./lib/main",
+	"interface": "interface.js",
+	"compilation_level": "ADVANCED_OPTIMIZATIONS",
+	"dependencies": {
+		"xport": "*"
+	},
+	"devDependencies": {
+		"4web": "*",
+		"jslint-core": "*"
+	},
+	"scripts": {
+		"postinstall": "node scripts/postinstall.js",
+		"build-test": "node scripts/build-test.js",
+		"lint": "node scripts/lint.js"
+	}
+}
