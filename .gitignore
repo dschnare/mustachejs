@@ -1,3 +1,4 @@
 node_modules
+lib/main.js
 test/js/*.js
 !test/js/tests.js

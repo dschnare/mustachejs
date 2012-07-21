@@ -226,35 +226,54 @@ This method will throw an error if any syntax errors are encountered.
 
 	Delimiters is an object of the form: {left: '{{', right: '}}'}
 
+Attempts to retrieve an array of all properties being referenced in a mustachio template.
+The referenced properties will be returned as Accessor objects with the following properties:
 
-	Attempts to retrieve an array of all properties being referenced in a mustachio template.
-	The referenced properties will be returned as Accessor objects with the following properties:
+- name() - The name that appears in the mustache token.
+- token() - The mustache token this accessor originates from.
+- get() - Retrieves the value of the property referenced. If the property value has a custom valueOf() method then the result of this method will be returned.
+- rawget() - Retrives the raw value of the property without calling the custom valueOf() method (if it exists).
+- set(value) - Attempts to set the property being referenced. If the value of the property is a function then the function will be called with the new value.
+- context() - The context of the property. Useful if the property value is a function.
 
-	- name() - The name that appears in the mustache token.
-	- get() - Retrieves the value of the property referenced. If the property value has a custom valueOf() method then the result of this method will be returned.
-	- rawget() - Retrives the raw value of the property without calling the custom valueOf() method (if it exists).
-	- set(value) - Attempts to set the property being referenced. If the value of the property is a function then the function will be called with the new value.
-	- context() - The context of the property. Useful if the property value is a function.
+The `token` the accessor originates from has the following properties:
 
-	Example:
+- type - The type of the token.
+- start - The start index where the token was found in the template. May be an object with a `valueOf()` method.
+- end - The end index where the token was found in the template. May be an object with a `valueOf()` method.
+- line - The line the token was found at.
+- text - The full text of the token including delimiters.
+- value - The value of the token without delimiters.
+- endToken - The `section-end` token if the token type is `section-begin` or `invert-section-begin`.
 
-		var template = '{{name}} {{children.first.name}}';
-		var data = {
-			name: 'Ninja',
-			children: {
-				first: {
-					name: 'Gaiden'
-				},
-			}
-		};
-		var accessors = MUSTACHE.inspect(template, data);
+The following are the token types that may be returned by `inspect`:
 
-		accessors[0].name(); // 'name'
-		accessors[0].get(); // 'Ninja'
-		accessors[0].set('Mario'); // Sets data.name to 'Mario'
-		accessors[0].context(); // Retrieves data
+- implicit
+- partial
+- interpolation
+- unescape-interpolation
+- section-begin
+- invert-section-begin
 
-		accessors[1].name(); // children.first.name
-		accessors[1].get(); // 'Gaiden'
-		accessors[1].set('Baby Mario'); // Sets data.children.first.name to 'Baby Mario'
-		accessors[1].context(); // Retrieves data.children.first
+Example:
+
+	var template = '{{name}} {{children.first.name}}';
+	var data = {
+		name: 'Ninja',
+		children: {
+			first: {
+				name: 'Gaiden'
+			},
+		}
+	};
+	var accessors = MUSTACHE.inspect(template, data);
+
+	accessors[0].name(); // 'name'
+	accessors[0].get(); // 'Ninja'
+	accessors[0].set('Mario'); // Sets data.name to 'Mario'
+	accessors[0].context(); // Retrieves data
+
+	accessors[1].name(); // children.first.name
+	accessors[1].get(); // 'Gaiden'
+	accessors[1].set('Baby Mario'); // Sets data.children.first.name to 'Baby Mario'
+	accessors[1].context(); // Retrieves data.children.first
