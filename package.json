@@ -1,6 +1,6 @@
 {
 	"name": "mustachejs",
-	"version": "2.5.6",
+	"version": "2.5.7",
 	"description": "Mustachejs is an implementation of the mustache template specification for JavaScript.",
 	"keywords": ["javascript","mustache","template","lambda"],
 	"author": {
